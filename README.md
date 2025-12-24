@@ -22,6 +22,45 @@ SystemVerilogによるRTL設計と検証を体系的に学習するための教�
 すべてを提供するのではなく、基礎となるサンプルから学び、
 応用は自分で実装することで実践力を養います。
 
+## 🌿 ブランチ戦略
+
+このリポジトリは**2つのブランチ**で管理されています：
+
+### `main` ブランチ（学習用）
+- **基礎サンプルコード**: 実装済み（mux2x1.sv, adder.sv, register.sv等）
+- **演習問題**: スケルトンまたは未作成
+- **推奨**: 学習者はこのブランチをクローンして作業
+
+```bash
+# 学習を開始する
+git clone https://github.com/hitsan/sv-tutorial.git
+cd sv-tutorial
+# mainブランチで演習問題に取り組む
+```
+
+### `solutions` ブランチ（解答例）
+- **すべての演習問題の解答例**を含む
+- 詰まったとき、実装方法を確認したいときに参照
+
+```bash
+# 解答例を確認する方法1: ブランチ切り替え
+git checkout solutions
+
+# 解答例を確認する方法2: 特定ファイルだけ参照
+git show solutions:rtl/combinational/priority_encoder.sv
+
+# 解答例を確認する方法3: 別ディレクトリで並行作業
+git worktree add ../veri-solutions solutions
+# 以降、../veri-solutions/ で解答を参照可能
+```
+
+### 学習のコツ
+
+1. **まず自分で実装してみる**（mainブランチ）
+2. **詰まったらサンプルコードを参照**（同じmainブランチ内）
+3. **それでも分からなければ解答例を確認**（solutionsブランチ）
+4. **解答例を見た後は、理解して自分で再実装**
+
 ## 🗂️ ディレクトリ構成
 
 ```
