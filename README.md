@@ -22,54 +22,95 @@ SystemVerilogによるRTL設計と検証を体系的に学習するための教�
 すべてを提供するのではなく、基礎となるサンプルから学び、
 応用は自分で実装することで実践力を養います。
 
-## 🌿 ブランチ戦略
+## 📁 ディレクトリ構造による学習
 
-このリポジトリは**2つのブランチ**で管理されています：
+このリポジトリは**ディレクトリ構造**で教材を整理しています：
 
-### `main` ブランチ（学習用）
-- **基礎サンプルコード**: 実装済み（mux2x1.sv, adder.sv, register.sv等）
-- **演習問題**: スケルトンまたは未作成
-- **推奨**: 学習者はこのブランチをクローンして作業
+### 3段階の学習ステップ
 
-```bash
-# 学習を開始する
-git clone https://github.com/hitsan/sv-tutorial.git
-cd sv-tutorial
-# mainブランチで演習問題に取り組む
-```
+各カテゴリ（combinational, sequential, fsm, structural）には、以下の3つのディレクトリがあります：
 
-### `solutions` ブランチ（解答例）
-- **すべての演習問題の解答例**を含む
+#### 1. `examples/` - サンプルコード
+- **実装済みの基礎サンプル**（mux2x1.sv, adder.sv, register.sv等）
+- まずこれらを読んで理解する
+
+#### 2. `exercises/` - 演習問題
+- **自分で実装する演習問題**（スケルトンまたは未作成）
+- サンプルを参考に自分で実装
+
+#### 3. `solutions/` - 解答例
+- **演習問題の解答例**
 - 詰まったとき、実装方法を確認したいときに参照
 
-```bash
-# 解答例を確認する方法1: ブランチ切り替え
-git checkout solutions
+### ディレクトリ例
 
-# 解答例を確認する方法2: 特定ファイルだけ参照
-git show solutions:rtl/combinational/priority_encoder.sv
-
-# 解答例を確認する方法3: 別ディレクトリで並行作業
-git worktree add ../veri-solutions solutions
-# 以降、../veri-solutions/ で解答を参照可能
+```
+rtl/
+├── combinational/
+│   ├── examples/       # mux2x1.sv, adder.sv（実装済み）
+│   ├── exercises/      # 演習問題（自分で実装）
+│   ├── solutions/      # 解答例
+│   └── README.md
+├── sequential/
+│   ├── examples/       # register.sv, counter.sv
+│   ├── exercises/
+│   ├── solutions/
+│   └── README.md
+└── ...
 ```
 
 ### 学習のコツ
 
-1. **まず自分で実装してみる**（mainブランチ）
-2. **詰まったらサンプルコードを参照**（同じmainブランチ内）
-3. **それでも分からなければ解答例を確認**（solutionsブランチ）
-4. **解答例を見た後は、理解して自分で再実装**
+1. **まず examples/ のサンプルコードを読んで理解する**
+2. **exercises/ で自分で実装してみる**
+3. **詰まったら examples/ を参照する**
+4. **それでも分からなければ solutions/ を確認する**
+5. **解答例を見た後は、理解して自分で再実装する**
+
+### クイックスタート
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/hitsan/sv-tutorial.git
+cd sv-tutorial
+
+# サンプルコードから学習開始
+cd rtl/combinational/examples
+# mux2x1.sv を読んで理解
+
+# 演習問題に取り組む
+cd ../exercises
+# ここで自分で実装
+
+# 解答例を参照（必要に応じて）
+cd ../solutions
+```
 
 ## 🗂️ ディレクトリ構成
 
 ```
-veri/
+sv-tutorial/
 ├── rtl/                    # RTL設計（合成可能なコード）
 │   ├── combinational/      # 組み合わせ回路
+│   │   ├── examples/       # サンプルコード（実装済み）
+│   │   ├── exercises/      # 演習問題（自分で実装）
+│   │   ├── solutions/      # 解答例
+│   │   └── README.md
 │   ├── sequential/         # 順序回路（レジスタ、カウンタ等）
+│   │   ├── examples/
+│   │   ├── exercises/
+│   │   ├── solutions/
+│   │   └── README.md
 │   ├── fsm/                # 有限ステートマシン
+│   │   ├── examples/
+│   │   ├── exercises/
+│   │   ├── solutions/
+│   │   └── README.md
 │   └── structural/         # 構造記述
+│       ├── examples/
+│       ├── exercises/
+│       ├── solutions/
+│       └── README.md
 │
 ├── tb/                     # テストベンチと検証
 │   └── README.md           # テストベンチ基礎
@@ -206,7 +247,7 @@ veri/
 
 ```bash
 # Icarus Verilogの場合
-cd rtl/combinational
+cd rtl/combinational/examples
 iverilog -g2012 -o mux2x1.vvp mux2x1.sv mux2x1_tb.sv
 vvp mux2x1.vvp
 gtkwave mux2x1_tb.vcd
@@ -223,45 +264,45 @@ vsim -c work.mux2x1_tb -do "run -all; quit"
 ### 3. 推奨学習順序
 
 1. `rtl/combinational/README.md` を読む
-2. `rtl/combinational/mux2x1.sv` のコードを理解
-3. `rtl/combinational/mux2x1_tb.sv` でシミュレーション
+2. `rtl/combinational/examples/mux2x1.sv` のコードを理解
+3. `rtl/combinational/examples/mux2x1_tb.sv` でシミュレーション
 4. 各READMEの推奨順序に従って学習を進める
 
 ## 📖 各章の詳細
 
 ### 組み合わせ回路 (Combinational)
 
-| 状態 | トピック | ファイル | 難易度 | 学習時間 |
-|------|---------|---------|--------|----------|
-| ✓ | 2:1 Mux | `mux2x1.sv` | ⭐ | 1-2時間 |
-| ✓ | 加算器 | `adder.sv` | ⭐⭐ | 2-3時間 |
-| 📝 | プライオリティエンコーダ | 演習問題 | ⭐⭐ | 2-3時間 |
-| 📝 | 乗算器 | 演習問題 | ⭐⭐⭐ | 3-4時間 |
-| 📝 | ALU | 演習問題 | ⭐⭐⭐ | 3-4時間 |
+| 状態 | トピック | ディレクトリ | 難易度 | 学習時間 |
+|------|---------|-------------|--------|----------|
+| ✓ | 2:1 Mux | `examples/mux2x1.sv` | ⭐ | 1-2時間 |
+| ✓ | 加算器 | `examples/adder.sv` | ⭐⭐ | 2-3時間 |
+| 📝 | プライオリティエンコーダ | `exercises/` → `solutions/` | ⭐⭐ | 2-3時間 |
+| 📝 | 乗算器 | `exercises/` → `solutions/` | ⭐⭐⭐ | 3-4時間 |
+| 📝 | ALU | `exercises/` → `solutions/` | ⭐⭐⭐ | 3-4時間 |
 
 ### 順序回路 (Sequential)
 
-| 状態 | トピック | ファイル | 難易度 | 学習時間 |
-|------|---------|---------|--------|----------|
-| ✓ | レジスタ | `register.sv` | ⭐⭐ | 2-3時間 |
-| ✓ | カウンタ | `counter.sv` | ⭐⭐ | 2-3時間 |
-| 📝 | シフトレジスタ | 演習問題 | ⭐⭐ | 2-3時間 |
-| 📝 | FIFO | 演習問題 | ⭐⭐⭐ | 4-5時間 |
+| 状態 | トピック | ディレクトリ | 難易度 | 学習時間 |
+|------|---------|-------------|--------|----------|
+| ✓ | レジスタ | `examples/register.sv` | ⭐⭐ | 2-3時間 |
+| ✓ | カウンタ | `examples/counter.sv` | ⭐⭐ | 2-3時間 |
+| 📝 | シフトレジスタ | `exercises/` → `solutions/` | ⭐⭐ | 2-3時間 |
+| 📝 | FIFO | `exercises/` → `solutions/` | ⭐⭐⭐ | 4-5時間 |
 
 ### FSM
 
-| 状態 | トピック | ファイル | 難易度 | 学習時間 |
-|------|---------|---------|--------|----------|
-| ✓ | Moore FSM | `moore_fsm.sv` | ⭐⭐⭐ | 3-4時間 |
-| 📝 | Mealy FSM | 演習問題 | ⭐⭐⭐ | 3-4時間 |
-| 📝 | UART制御 | 演習問題 | ⭐⭐⭐⭐ | 5-6時間 |
+| 状態 | トピック | ディレクトリ | 難易度 | 学習時間 |
+|------|---------|-------------|--------|----------|
+| ✓ | Moore FSM | `examples/moore_fsm.sv` | ⭐⭐⭐ | 3-4時間 |
+| 📝 | Mealy FSM | `exercises/` → `solutions/` | ⭐⭐⭐ | 3-4時間 |
+| 📝 | UART制御 | `exercises/` → `solutions/` | ⭐⭐⭐⭐ | 5-6時間 |
 
 ### 構造記述 (Structural)
 
-| 状態 | トピック | ファイル | 難易度 | 学習時間 |
-|------|---------|---------|--------|----------|
-| 📝 | モジュールインスタンス化 | 演習問題 | ⭐⭐ | 2-3時間 |
-| 📝 | generate構文 | 演習問題 | ⭐⭐⭐ | 3-4時間 |
+| 状態 | トピック | ディレクトリ | 難易度 | 学習時間 |
+|------|---------|-------------|--------|----------|
+| 📝 | モジュールインスタンス化 | `exercises/` → `solutions/` | ⭐⭐ | 2-3時間 |
+| 📝 | generate構文 | `exercises/` → `solutions/` | ⭐⭐⭐ | 3-4時間 |
 
 ## 💡 学習のヒント
 
@@ -334,13 +375,13 @@ vsim -c work.mux2x1_tb -do "run -all; quit"
 
 ## ✅ 学習チェックリスト
 
-### 基礎編（サンプル学習）
+### 基礎編（サンプル学習 - examples/）
 
-- [ ] `mux2x1.sv`を読んで組み合わせ回路の基本を理解
-- [ ] `adder.sv`でキャリー処理とオーバーフロー検出を理解
-- [ ] `register.sv`でレジスタの様々な実装方法を理解
-- [ ] `counter.sv`でカウンタのバリエーションを理解
-- [ ] `moore_fsm.sv`でFSMの基本パターンを理解
+- [ ] `combinational/examples/mux2x1.sv`を読んで組み合わせ回路の基本を理解
+- [ ] `combinational/examples/adder.sv`でキャリー処理とオーバーフロー検出を理解
+- [ ] `sequential/examples/register.sv`でレジスタの様々な実装方法を理解
+- [ ] `sequential/examples/counter.sv`でカウンタのバリエーションを理解
+- [ ] `fsm/examples/moore_fsm.sv`でFSMの基本パターンを理解
 - [ ] ブロッキング vs ノンブロッキング代入の違いを理解
 - [ ] ラッチを意図せず生成しない方法を理解
 
