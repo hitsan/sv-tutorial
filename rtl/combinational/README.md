@@ -13,9 +13,9 @@
 
 ## 学習の推奨順序
 
-凡例: ✓ = サンプル実装済み | 📝 = 演習問題（自分で実装）
+凡例: ✓ = サンプル実装済み (examples/) | 📝 = 演習問題 (exercises/ → solutions/)
 
-### 1. ✓ 2:1マルチプレクサ (mux2x1.sv)
+### 1. ✓ 2:1マルチプレクサ (examples/mux2x1.sv)
 - **学習内容**:
   - 組み合わせ回路の基本構文とガイドライン
   - `assign`文による記述
@@ -25,9 +25,9 @@
 - **重要ポイント**:
   - SystemVerilogでは1つのモジュールに1つの実装のみ
   - 複数の記述方法が同じ回路を生成
-- **ファイル**: `mux2x1.sv`, `mux2x1_tb.sv`
+- **ファイル**: `examples/mux2x1.sv`, `examples/mux2x1_tb.sv`
 
-### 2. 📝 4入力プライオリティエンコーダ (priority_encoder_4in.sv)
+### 2. 📝 4入力プライオリティエンコーダ (exercises/priority_encoder_4in.sv)
 - **学習内容**:
   - パックド配列 (packed arrays)
   - `if`文と`case`文の使い分け
@@ -35,9 +35,10 @@
 - **重要ポイント**:
   - プライオリティロジックには`if`文が適切
   - 等価比較には`case`文が効率的
-- **演習**: `mux2x1.sv`を参考に、4入力のプライオリティエンコーダを実装してください
+- **演習**: `examples/mux2x1.sv`を参考に、4入力のプライオリティエンコーダを実装してください
+- **解答**: `solutions/priority_encoder_4in.sv`（詰まったら参照）
 
-### 3. 📝 パラメータ化プライオリティエンコーダ (priority_encoder.sv)
+### 3. 📝 パラメータ化プライオリティエンコーダ (exercises/priority_encoder.sv)
 - **学習内容**:
   - `parameter`による汎用化
   - `always_comb`内での`for`ループ
@@ -47,8 +48,9 @@
   - パラメータで再利用性を向上
   - ビット幅の不一致を避ける方法
 - **演習**: priority_encoder_4in.svをパラメータ化して汎用的にしてください
+- **解答**: `solutions/priority_encoder.sv`（詰まったら参照）
 
-### 4. ✓ 加算器 (adder.sv)
+### 4. ✓ 加算器 (examples/adder.sv)
 - **学習内容**:
   - 算術演算
   - ブロッキング代入 vs ノンブロッキング代入
@@ -61,9 +63,9 @@
   - キャリーアウト付き加算器
   - キャリーイン/アウト付き加算器
   - オーバーフロー検出付き加算器
-- **ファイル**: `adder.sv`
+- **ファイル**: `examples/adder.sv`
 
-### 5. 📝 乗算器 (multiplier.sv)
+### 5. 📝 乗算器 (exercises/multiplier.sv)
 - **学習内容**:
   - `signed`と`unsigned`の扱い
   - `generate`文による繰り返し生成
@@ -73,9 +75,10 @@
 - **重要ポイント**:
   - 符号付き/符号なし演算の違い
   - 生成ブロックによる構造的記述
-- **演習**: `adder.sv`を参考に、符号付き/符号なし乗算器を実装してください
+- **演習**: `examples/adder.sv`を参考に、符号付き/符号なし乗算器を実装してください
+- **解答**: `solutions/multiplier.sv`（詰まったら参照）
 
-### 6. 📝 ALU (alu.sv)
+### 6. 📝 ALU (exercises/alu.sv)
 - **学習内容**:
   - ラッチが生成される一般的な問題
   - ラッチを避ける戦略
@@ -87,6 +90,7 @@
   - 完全な条件分岐の重要性
   - デフォルト値の設定
 - **演習**: 加算、減算、AND、OR、XOR、シフト演算を持つALUを設計してください
+- **解答**: `solutions/alu.sv`（詰まったら参照）
 
 ## よくある間違いと対策
 
@@ -149,6 +153,9 @@ always_comb
 
 ### シミュレーション実行例（VCS/Questa/Vivado等）
 ```bash
+# examples/ ディレクトリに移動
+cd examples
+
 # VCS例
 vcs -sverilog mux2x1.sv mux2x1_tb.sv
 ./simv

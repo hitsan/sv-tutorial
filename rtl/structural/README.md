@@ -16,28 +16,31 @@
 
 ## 学習の推奨順序
 
-凡例: ✓ = サンプル実装済み | 📝 = 演習問題（自分で実装）
+凡例: ✓ = サンプル実装済み (examples/) | 📝 = 演習問題 (exercises/ → solutions/)
 
-### 1. 📝 基本的なモジュールインスタンス化
+### 1. 📝 基本的なモジュールインスタンス化 (exercises/module_inst.sv)
 - **学習内容**:
   - モジュールのインスタンス化
   - 名前付きポート接続
   - 位置ベースポート接続
-- **演習**: `rtl/combinational/`のモジュールを使って4:1マルチプレクサを構造記述で実装してください
+- **演習**: `../combinational/examples/`のモジュールを使って4:1マルチプレクサを構造記述で実装してください
+- **解答**: `solutions/module_inst.sv`（詰まったら参照）
 
-### 2. 📝 generate構文
+### 2. 📝 generate構文 (exercises/generate_example.sv)
 - **学習内容**:
   - `for generate` - 繰り返しパターン
   - `if generate` - 条件付き生成
   - `case generate` - 選択的生成
 - **演習**: リップルキャリー加算器を`for generate`で実装してください
+- **解答**: `solutions/generate_example.sv`（詰まったら参照）
 
-### 3. 📝 パラメータ化
+### 3. 📝 パラメータ化 (exercises/param_design.sv)
 - **学習内容**:
   - パラメータオーバーライド
   - `localparam`の使用
   - `$clog2`などのシステム関数
 - **演習**: パラメータ化された加算器ツリーを実装してください
+- **解答**: `solutions/param_design.sv`（詰まったら参照）
 
 ## インスタンス化の基本
 

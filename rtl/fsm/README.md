@@ -71,28 +71,29 @@ FSMの設計では、コーディング前に以下を明確にします：
 
 ## 学習の推奨順序
 
-凡例: ✓ = サンプル実装済み | 📝 = 演習問題（自分で実装）
+凡例: ✓ = サンプル実装済み (examples/) | 📝 = 演習問題 (exercises/ → solutions/)
 
-### 1. ✓ Moore型ステートマシン (moore_fsm.sv)
+### 1. ✓ Moore型ステートマシン (examples/moore_fsm.sv)
 - **学習内容**:
   - 1プロセスモデル vs 2プロセスモデル
   - enumを使った状態定義
   - 状態遷移ロジック
   - 出力ロジック（状態のみに依存）
 - **実装例**: シーケンス検出器、トラフィックライト
-- **ファイル**: `moore_fsm.sv`（4つの実装例）
+- **ファイル**: `examples/moore_fsm.sv`（4つの実装例）
 
-### 2. 📝 Mealy型ステートマシン (mealy_fsm.sv)
+### 2. 📝 Mealy型ステートマシン (exercises/mealy_fsm.sv)
 - **学習内容**:
   - 2プロセスモデルの実装
   - 入力依存の出力
   - Moore vs Mealyの違い
   - ハイブリッド実装（Moore + Mealy）
 - **演習**: エッジ検出器やパルス生成器をMealy型で実装してください
+- **解答**: `solutions/mealy_fsm.sv`（詰まったら参照）
 
 ### 3. 📝 実践的なFSM例
-- **演習1**: UART送受信制御FSM
-- **演習2**: メモリコントローラFSM
+- **演習1**: UART送受信制御FSM (`exercises/uart_fsm.sv` → `solutions/uart_fsm.sv`)
+- **演習2**: メモリコントローラFSM (`exercises/mem_ctrl_fsm.sv` → `solutions/mem_ctrl_fsm.sv`)
 - **演習3**: プロトコル実装（I2C, SPI等）のFSM
 
 ## 状態のエンコーディング
