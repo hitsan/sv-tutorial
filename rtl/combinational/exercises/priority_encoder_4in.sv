@@ -9,13 +9,13 @@
 // Description: if-else文による実装
 
 module priority_encoder_4in_if #(
-  parameter int NUM_INPUTS = 4,
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS)
+  parameter int NUM_INPUTS = 4
 ) (
   input  logic [NUM_INPUTS-1:0] inputs,
   output logic [NUM_OUTPUTS-1:0] result,
   output logic valid
 );
+  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
   always_comb begin
     valid = 1'b1;
 
@@ -31,46 +31,72 @@ module priority_encoder_4in_if #(
 endmodule  // priority_encoder_4in_if
 
 
-// Module: priority_encoder_4in_case_unique
-// Description: unique casez文による実装
+// Module: priority_encoder_4in_for
+// Description: forループによる実装
 
-module priority_encoder_4in_case_unique #(
-  parameter int NUM_INPUTS = 4,
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS)
+module priority_encoder_4in_for #(
+  parameter int NUM_INPUTS = 4
 ) (
   input  logic [NUM_INPUTS-1:0] inputs,
   output logic [NUM_OUTPUTS-1:0] result,
   output logic valid
 );
+  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
+
+  always_comb begin
+    result = '0;
+    valid = 1'b0;
+    for(int i = 0; i < NUM_INPUTS; i++) begin
+      if (inputs[i]) begin
+        result = i[NUM_OUTPUTS-1:0];
+        valid = 1'b1;
+      end
+    end
+  end
+endmodule  // priority_encoder_4in_for
+
+
+// Module: priority_encoder_4in_case
+// Description: priority casez文による実装
+
+module priority_encoder_4in_case #(
+  parameter int NUM_INPUTS = 4
+) (
+  input  logic [NUM_INPUTS-1:0] inputs,
+  output logic [NUM_OUTPUTS-1:0] result,
+  output logic valid
+);
+  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
   always_comb begin
     valid = 1'b1;
 
-    unique casez (inputs)
+    priority casez (inputs)
       4'b1???: result = 2'b11;
       4'b01??: result = 2'b10;
       4'b001?: result = 2'b01;
       4'b0001: result = 2'b00;
-      4'b0000: begin
+      default: begin
         result = 2'b00;
         valid = 1'b0;
       end
     endcase
   end
-endmodule  // priority_encoder_4in_case_unique
+endmodule  // priority_encoder_4in_case
 
 
 // Module: priority_encoder_4in
 // Description: トップモジュール。コメントアウトで実装を切り替え。
 
 module priority_encoder_4in #(
-  parameter int NUM_INPUTS = 4,
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS)
+  parameter int NUM_INPUTS = 4
 ) (
   input  logic [NUM_INPUTS-1:0] inputs,
   output logic [NUM_OUTPUTS-1:0] result,
   output logic valid
 );
   // Uncomment the desired implementation
-  priority_encoder_4in_case_unique #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
+  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
+  priority_encoder_4in_case #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
   //priority_encoder_4in_if #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
+  //priority_encoder_4in_for #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
 endmodule  // priority_encoder_4in
