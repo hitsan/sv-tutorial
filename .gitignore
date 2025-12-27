@@ -1,2 +1,17 @@
 ref/*
 !ref/clone_refs.sh
+
+# Verilator/シミュレータ生成ファイル
+obj_*/
+*.vcd
+*.vvp
+*.log
+*.dmp
+logs/
+
+# コンパイル成果物
+*.o
+*.a
+*.so
+*.out
+*.exe
