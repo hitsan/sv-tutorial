@@ -5,17 +5,16 @@
 // Description: 4入力のpriority encoder。最上位ビットが最高優先度。
 //              複数の実装方法を提供し、トップモジュールで切り替え可能。
 
+`timescale 1ns / 100ps
+
 // Module: priority_encoder_4in_if
 // Description: if-else文による実装
 
-module priority_encoder_4in_if #(
-  parameter int NUM_INPUTS = 4
-) (
-  input  logic [NUM_INPUTS-1:0] inputs,
-  output logic [NUM_OUTPUTS-1:0] result,
+module priority_encoder_4in_if (
+  input  logic [3:0] inputs,
+  output logic [1:0] result,
   output logic valid
 );
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
   always_comb begin
     valid = 1'b1;
 
@@ -31,42 +30,14 @@ module priority_encoder_4in_if #(
 endmodule  // priority_encoder_4in_if
 
 
-// Module: priority_encoder_4in_for
-// Description: forループによる実装
-
-module priority_encoder_4in_for #(
-  parameter int NUM_INPUTS = 4
-) (
-  input  logic [NUM_INPUTS-1:0] inputs,
-  output logic [NUM_OUTPUTS-1:0] result,
-  output logic valid
-);
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
-
-  always_comb begin
-    result = '0;
-    valid = 1'b0;
-    for(int i = 0; i < NUM_INPUTS; i++) begin
-      if (inputs[i]) begin
-        result = i[NUM_OUTPUTS-1:0];
-        valid = 1'b1;
-      end
-    end
-  end
-endmodule  // priority_encoder_4in_for
-
-
 // Module: priority_encoder_4in_case
 // Description: priority casez文による実装
 
-module priority_encoder_4in_case #(
-  parameter int NUM_INPUTS = 4
-) (
-  input  logic [NUM_INPUTS-1:0] inputs,
-  output logic [NUM_OUTPUTS-1:0] result,
+module priority_encoder_4in_case (
+  input  logic [3:0] inputs,
+  output logic [1:0] result,
   output logic valid
 );
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
   always_comb begin
     valid = 1'b1;
 
@@ -87,16 +58,12 @@ endmodule  // priority_encoder_4in_case
 // Module: priority_encoder_4in
 // Description: トップモジュール。コメントアウトで実装を切り替え。
 
-module priority_encoder_4in #(
-  parameter int NUM_INPUTS = 4
-) (
-  input  logic [NUM_INPUTS-1:0] inputs,
-  output logic [NUM_OUTPUTS-1:0] result,
+module priority_encoder_4in (
+  input  logic [3:0] inputs,
+  output logic [1:0] result,
   output logic valid
 );
   // Uncomment the desired implementation
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
-  priority_encoder_4in_case #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
-  //priority_encoder_4in_if #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
-  //priority_encoder_4in_for #(.NUM_INPUTS(NUM_INPUTS)) pe (.*);
+  priority_encoder_4in_case pe (.*);
+  //priority_encoder_4in_if pe (.*);
 endmodule  // priority_encoder_4in
