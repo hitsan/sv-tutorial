@@ -10,6 +10,7 @@ module priority_encoder_4in_tb;
     // ============================================================================
     logic [3:0] data_in;
     logic [1:0] data_out;
+    logic       valid;
 
     // ============================================================================
     // DUT (Device Under Test) のインスタンス化
@@ -21,18 +22,25 @@ module priority_encoder_4in_tb;
     // ============================================================================
     // DUTの期待値を計算する関数
     // 最上位ビットから優先的にエンコード
-    function automatic logic [1:0] calc_expected(logic [3:0] din);
+    function automatic logic [1:0] calc_expected_result(logic [3:0] din);
         if (din[3]) return 2'b11;
         else if (din[2]) return 2'b10;
         else if (din[1]) return 2'b01;
         else return 2'b00;  // din[0]=1 or all 0
     endfunction
 
+    // valid信号の期待値を計算する関数
+    // 入力に少なくとも1つの'1'があればvalid=1
+    function automatic logic calc_expected_valid(logic [3:0] din);
+        return (din != 4'b0000);  // 全て0でなければvalid
+    endfunction
+
     // ============================================================================
     // テストケース実行タスク
     // ============================================================================
     task automatic test_case(input logic [3:0] din);
-        logic [1:0] expected;
+        logic [1:0] expected_result;
+        logic       expected_valid;
 
         // 入力を設定
         data_in = din;
@@ -41,12 +49,18 @@ module priority_encoder_4in_tb;
         #1;
 
         // 期待値を計算
-        expected = calc_expected(din);
+        expected_result = calc_expected_result(din);
+        expected_valid  = calc_expected_valid(din);
 
-        // 出力が期待値と一致することを確認（===でX/Z値も厳密にチェック）
-        assert (data_out === expected)
+        // data_out が期待値と一致することを確認（===でX/Z値も厳密にチェック）
+        assert (data_out === expected_result)
             else $error("[%0t] data_in=4'b%b: data_out=%b expected=%b",
-                        $realtime, din, data_out, expected);
+                        $realtime, din, data_out, expected_result);
+
+        // valid が期待値と一致することを確認
+        assert (valid === expected_valid)
+            else $error("[%0t] data_in=4'b%b: valid=%b expected=%b",
+                        $realtime, din, valid, expected_valid);
 
         #1;  // 次のテストケースまで待機
     endtask
@@ -92,6 +106,8 @@ endmodule : priority_encoder_4in_tb
 // ============================================================================
 // 1. 全16パターンを網羅的にテスト（完全なカバレッジ）
 // 2. Golden reference関数で期待値を自動計算
+//    - calc_expected_result: data_out の期待値
+//    - calc_expected_valid: valid の期待値（全て0の場合のみ0）
 // 3. assertを使って自動的にエラーを検出
 // 4. === 演算子でX/Z値も厳密にチェック
 // 5. タイムアウト保護でハングを防ぐ
@@ -100,3 +116,7 @@ endmodule : priority_encoder_4in_tb
 // 動作確認:
 // - エラーなしで "Tests completed." が表示されることを確認
 // - エラー時は該当の入力値と期待値/実際値が表示される
+//
+// validのテスト:
+// - data_in = 4'b0000 のときのみ valid = 0
+// - それ以外の全てのケースで valid = 1
