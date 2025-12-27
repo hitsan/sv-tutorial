@@ -1,8 +1,11 @@
+// Module: priority_encoder_4in
+// Description: 4入力のpriority encoder。最上位ビットが最高優先度。
+
 module priority_encoder_4in #(
-  parameter WIDTH = 4
+  parameter NUM_INPUTS = 4
 ) (
-  input logic [WIDTH-1:0] data_in,
-  output logic [WIDTH/2-1:0] data_out,
+  input logic [WIDTH-1:0] inputs,
+  output logic [WIDTH/2-1:0] result,
   output logic valid
 );
   always_comb begin
