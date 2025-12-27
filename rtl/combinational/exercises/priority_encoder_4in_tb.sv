@@ -8,8 +8,8 @@ module priority_encoder_4in_tb;
     // ============================================================================
     // テストベンチの信号宣言
     // ============================================================================
-    logic [3:0] data_in;
-    logic [1:0] data_out;
+    logic [3:0] inputs;
+    logic [1:0] result;
     logic       valid;
 
     // ============================================================================
@@ -43,7 +43,7 @@ module priority_encoder_4in_tb;
         logic       expected_valid;
 
         // 入力を設定
-        data_in = din;
+        inputs = din;
 
         // 組み合わせ回路なので伝搬遅延を考慮
         #1;
@@ -52,14 +52,14 @@ module priority_encoder_4in_tb;
         expected_result = calc_expected_result(din);
         expected_valid  = calc_expected_valid(din);
 
-        // data_out が期待値と一致することを確認（===でX/Z値も厳密にチェック）
-        assert (data_out === expected_result)
-            else $error("[%0t] data_in=4'b%b: data_out=%b expected=%b",
-                        $realtime, din, data_out, expected_result);
+        // result が期待値と一致することを確認（===でX/Z値も厳密にチェック）
+        assert (result === expected_result)
+            else $error("[%0t] inputs=4'b%b: result=%b expected=%b",
+                        $realtime, din, result, expected_result);
 
         // valid が期待値と一致することを確認
         assert (valid === expected_valid)
-            else $error("[%0t] data_in=4'b%b: valid=%b expected=%b",
+            else $error("[%0t] inputs=4'b%b: valid=%b expected=%b",
                         $realtime, din, valid, expected_valid);
 
         #1;  // 次のテストケースまで待機
@@ -106,7 +106,7 @@ endmodule : priority_encoder_4in_tb
 // ============================================================================
 // 1. 全16パターンを網羅的にテスト（完全なカバレッジ）
 // 2. Golden reference関数で期待値を自動計算
-//    - calc_expected_result: data_out の期待値
+//    - calc_expected_result: result の期待値
 //    - calc_expected_valid: valid の期待値（全て0の場合のみ0）
 // 3. assertを使って自動的にエラーを検出
 // 4. === 演算子でX/Z値も厳密にチェック
@@ -118,5 +118,5 @@ endmodule : priority_encoder_4in_tb
 // - エラー時は該当の入力値と期待値/実際値が表示される
 //
 // validのテスト:
-// - data_in = 4'b0000 のときのみ valid = 0
+// - inputs = 4'b0000 のときのみ valid = 0
 // - それ以外の全てのケースで valid = 1
