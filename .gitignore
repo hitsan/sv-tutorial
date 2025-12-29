@@ -18,3 +18,5 @@ logs/
 
 # ローカル設定ファイル
 .svlint.toml
+
+.claude/*
