@@ -18,8 +18,10 @@ module exercise1_dff #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // TODO: always_ffブロックで実装
-
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) q <= '0;
+    else q <= d;
+  end
 endmodule : exercise1_dff
 
 
@@ -39,7 +41,7 @@ module exercise2_enable_reg #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // TODO: イネーブル制御を実装
+  // TODO: イネーブル制御を実装
 
 endmodule : exercise2_enable_reg
 
@@ -59,8 +61,8 @@ module exercise3_pipeline #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // TODO: 中間段のレジスタを宣言
-    // TODO: パイプライン処理を実装
+  // TODO: 中間段のレジスタを宣言
+  // TODO: パイプライン処理を実装
 
 endmodule : exercise3_pipeline
 
@@ -75,13 +77,13 @@ endmodule : exercise3_pipeline
 module exercise4_shift_reg #(
     parameter int WIDTH = 8
 ) (
-    input  logic       clk,
-    input  logic       rst_n,
-    input  logic       serial_in,
-    output logic       serial_out,
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic             serial_in,
+    output logic             serial_out,
     output logic [WIDTH-1:0] parallel_out
 );
-    // TODO: シフトレジスタを実装
+  // TODO: シフトレジスタを実装
 
 endmodule : exercise4_shift_reg
 
@@ -100,7 +102,7 @@ module exercise5_counter #(
     input  logic             rst_n,
     output logic [WIDTH-1:0] count
 );
-    // TODO: カウンタロジックを実装
+  // TODO: カウンタロジックを実装
 
 endmodule : exercise5_counter
 
@@ -121,7 +123,7 @@ module exercise6_updown_counter #(
     input  logic             up,
     output logic [WIDTH-1:0] count
 );
-    // TODO: アップ/ダウンカウンタを実装
+  // TODO: アップ/ダウンカウンタを実装
 
 endmodule : exercise6_updown_counter
 
