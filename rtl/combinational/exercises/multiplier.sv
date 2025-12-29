@@ -13,11 +13,11 @@ module multiplier #(
   output logic [OUTPUT_WIDTH-1:0] product
 );
 
-  always_comb begin
-    case (IS_SIGNED)
-      1'b1: product = signed'(in0) * signed'(in1);
-      1'b0: product = in0 * in1;
-    endcase
-  end
-
+  generate
+    if (IS_SIGNED) begin : signed_mult
+      always_comb product = signed'(in0) * signed'(in1);
+    end else begin : unsigned_mult
+      always_comb product = in0 * in1;
+    end
+  endgenerate
 endmodule
