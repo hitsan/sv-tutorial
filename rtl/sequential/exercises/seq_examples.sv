@@ -42,6 +42,10 @@ module exercise2_enable_reg #(
     output logic [WIDTH-1:0] q
 );
   // TODO: イネーブル制御を実装
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) q <= '0;
+    else if (en) q <= d;
+  end
 
 endmodule : exercise2_enable_reg
 
