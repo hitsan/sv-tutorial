@@ -67,6 +67,16 @@ module exercise3_pipeline #(
 );
   // TODO: 中間段のレジスタを宣言
   // TODO: パイプライン処理を実装
+  logic [WIDTH-1:0] stage1;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      q <= '0;
+      stage1 <= '0;
+    end else begin
+      stage1 <= d;
+      q <= stage1;
+    end
+  end
 
 endmodule : exercise3_pipeline
 
