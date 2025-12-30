@@ -107,8 +107,14 @@ module shift_reg_bidirectional #(
     output logic             serial_out_left,
     output logic [WIDTH-1:0] parallel_out
 );
-  // TODO: 双方向シフトレジスタを実装
+  assign serial_out_right = parallel_out[0];
+  assign serial_out_left = parallel_out[WIDTH-1];
 
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) parallel_out <= '0;
+    else if (dir) parallel_out <= {serial_in_right, parallel_out[WIDTH-1:1]};
+    else parallel_out <= {parallel_out[WIDTH-2:0], serial_in_left};
+  end
 endmodule : shift_reg_bidirectional
 
 
