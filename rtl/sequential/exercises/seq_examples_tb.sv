@@ -208,13 +208,13 @@ module seq_examples_tb;
         $display("\n[Test 5] Up Counter");
         rst_n = 0;
         @(posedge clk);
-        rst_n = 1;
         #1;
+        rst_n = 1;
 
         for (int i = 0; i < 5; i++) begin
             @(posedge clk);
             #1;
-            if (ex5_count !== (i+1)) begin
+            if (ex5_count !== 8'(i+1)) begin
                 $error("  FAIL: Expected count=%0d, got count=%0d", i+1, ex5_count);
                 errors++;
             end
@@ -227,6 +227,7 @@ module seq_examples_tb;
         $display("\n[Test 6] Up/Down Counter");
         rst_n = 0;
         @(posedge clk);
+        #1;
         rst_n = 1;
         ex6_en = 1;
         ex6_up = 1;
@@ -248,10 +249,9 @@ module seq_examples_tb;
 
         // イネーブル無効
         ex6_en = 0;
-        logic [WIDTH-1:0] hold_value = ex6_count;
         @(posedge clk);
         #1;
-        if (ex6_count !== hold_value) begin
+        if (ex6_count !== 8'd1) begin  // 3 up - 2 down = 1
             $error("  FAIL: Count changed when en=0");
             errors++;
         end else begin
