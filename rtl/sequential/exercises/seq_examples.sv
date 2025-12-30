@@ -152,8 +152,13 @@ module exercise6_updown_counter #(
     input  logic             up,
     output logic [WIDTH-1:0] count
 );
-  // TODO: アップ/ダウンカウンタを実装
-
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) count <= '0;
+    else if (en) begin
+      if (up) count <= count + 1;
+      else count <= count - 1;
+    end
+  end
 endmodule : exercise6_updown_counter
 
 
