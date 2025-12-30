@@ -98,6 +98,15 @@ module exercise4_shift_reg #(
     output logic [WIDTH-1:0] parallel_out
 );
   // TODO: シフトレジスタを実装
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      parallel_out <= '0;
+      serial_out <= '0;
+    end else begin
+      parallel_out <= {serial_in, parallel_out[WIDTH-1:1]};
+      serial_out <= parallel_out[0];
+    end
+  end
 
 endmodule : exercise4_shift_reg
 
