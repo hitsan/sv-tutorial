@@ -140,8 +140,19 @@ module shift_reg_universal #(
     output logic             serial_out_left,
     output logic [WIDTH-1:0] parallel_out
 );
-  // TODO: ユニバーサルシフトレジスタを実装
-
+  assign serial_out_right = parallel_out[0];
+  assign serial_out_left = parallel_out[WIDTH-1];
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) parallel_out <= '0;
+    else begin
+      casez (mode)
+        2'b00: parallel_out <= parallel_out;
+        2'b01: parallel_out <= {serial_in_right, parallel_out[WIDTH-1:1]};
+        2'b10: parallel_out <= {parallel_out[WIDTH-2:0], serial_in_left};
+        2'b11: parallel_out <= parallel_in;
+      endcase
+    end
+  end
 endmodule : shift_reg_universal
 
 
@@ -158,8 +169,10 @@ module shift_reg_ring #(
     input  logic             rst_n,
     output logic [WIDTH-1:0] ring_out
 );
-  // TODO: リングカウンタを実装
-
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) ring_out <= 1;
+    else ring_out <= {ring_out[WIDTH-2:0], ring_out[WIDTH-1]};
+  end
 endmodule : shift_reg_ring
 
 
