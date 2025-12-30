@@ -82,43 +82,13 @@ endmodule : exercise3_pipeline
 
 
 // ============================================================================
-// 演習4: シフトレジスタ（右シフト）
-// ============================================================================
-// 要件:
-// - クロックごとにデータを右にシフト
-// - シリアル入力(serial_in)を最上位ビットに取り込む
-// - 最下位ビットをserial_outに出力
-module exercise4_shift_reg #(
-    parameter int WIDTH = 8
-) (
-    input  logic             clk,
-    input  logic             rst_n,
-    input  logic             serial_in,
-    output logic             serial_out,
-    output logic [WIDTH-1:0] parallel_out
-);
-  // TODO: シフトレジスタを実装
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      parallel_out <= '0;
-      serial_out <= '0;
-    end else begin
-      parallel_out <= {serial_in, parallel_out[WIDTH-1:1]};
-      serial_out <= parallel_out[0];
-    end
-  end
-
-endmodule : exercise4_shift_reg
-
-
-// ============================================================================
-// 演習5: アップカウンタ
+// 演習4: アップカウンタ
 // ============================================================================
 // 要件:
 // - クロックごとにカウント値を1増加
 // - 最大値(2^WIDTH-1)に達したら0に戻る
 // - リセット時は0にクリア
-module exercise5_counter #(
+module exercise4_counter #(
     parameter int WIDTH = 8
 ) (
     input  logic             clk,
@@ -133,17 +103,17 @@ module exercise5_counter #(
     else count <= count + 1;
   end
 
-endmodule : exercise5_counter
+endmodule : exercise4_counter
 
 
 // ============================================================================
-// 演習6: イネーブル付きアップ/ダウンカウンタ
+// 演習5: イネーブル付きアップ/ダウンカウンタ
 // ============================================================================
 // 要件:
 // - enが1のときのみカウント
 // - upが1ならカウントアップ、0ならカウントダウン
 // - オーバーフロー/アンダーフローで折り返し
-module exercise6_updown_counter #(
+module exercise5_updown_counter #(
     parameter int WIDTH = 8
 ) (
     input  logic             clk,
@@ -159,7 +129,7 @@ module exercise6_updown_counter #(
       else count <= count - 1;
     end
   end
-endmodule : exercise6_updown_counter
+endmodule : exercise5_updown_counter
 
 
 // ============================================================================
