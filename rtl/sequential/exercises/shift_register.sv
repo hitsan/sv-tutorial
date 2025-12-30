@@ -77,7 +77,13 @@ module shift_reg_piso #(
     input  logic             serial_in,
     output logic             serial_out
 );
-  // TODO: PISOシフトレジスタを実装
+  logic [WIDTH-1:0] data_reg;
+  assign serial_out = data_reg[0];
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) data_reg <= '0;
+    else if (load) data_reg <= parallel_in;
+    else data_reg <= {serial_in, data_reg[WIDTH-1:1]};
+  end
 
 endmodule : shift_reg_piso
 
