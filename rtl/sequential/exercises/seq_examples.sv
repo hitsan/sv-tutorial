@@ -125,7 +125,13 @@ module exercise5_counter #(
     input  logic             rst_n,
     output logic [WIDTH-1:0] count
 );
-  // TODO: カウンタロジックを実装
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) count <= '0;
+    else if (count == '1) begin
+      count <= '0;
+    end
+    else count <= count + 1;
+  end
 
 endmodule : exercise5_counter
 
