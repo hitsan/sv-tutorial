@@ -47,7 +47,16 @@ module shift_reg_left #(
     output logic             serial_out,
     output logic [WIDTH-1:0] parallel_out
 );
-  // TODO: 左シフトレジスタを実装
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      serial_out <= '0;
+      parallel_out <= '0;
+    end
+    else begin
+      parallel_out <= {parallel_out[WIDTH-2:0], serial_in};
+      serial_out <= parallel_out[WIDTH-1];
+    end
+  end
 
 endmodule : shift_reg_left
 
