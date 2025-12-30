@@ -1,0 +1,159 @@
+// シフトレジスタの各種実装例
+// 様々なタイプのシフトレジスタ
+
+`timescale 1ns / 100ps
+
+// ============================================================================
+// 例1: 基本的な右シフトレジスタ (SISO: Serial-In Serial-Out)
+// ============================================================================
+// 要件:
+// - クロックごとにデータを右にシフト
+// - serial_inを最上位ビットに取り込む
+// - 最下位ビットをserial_outに出力
+module shift_reg_right #(
+    parameter int WIDTH = 8
+) (
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic             serial_in,
+    output logic             serial_out,
+    output logic [WIDTH-1:0] parallel_out
+);
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      parallel_out <= '0;
+      serial_out <= '0;
+    end else begin
+      parallel_out <= {serial_in, parallel_out[WIDTH-1:1]};
+      serial_out <= parallel_out[0];
+    end
+  end
+endmodule : shift_reg_right
+
+
+// ============================================================================
+// 例2: 左シフトレジスタ
+// ============================================================================
+// 要件:
+// - クロックごとにデータを左にシフト
+// - serial_inを最下位ビットに取り込む
+// - 最上位ビットをserial_outに出力
+module shift_reg_left #(
+    parameter int WIDTH = 8
+) (
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic             serial_in,
+    output logic             serial_out,
+    output logic [WIDTH-1:0] parallel_out
+);
+  // TODO: 左シフトレジスタを実装
+
+endmodule : shift_reg_left
+
+
+// ============================================================================
+// 例3: パラレルロード付きシフトレジスタ (PISO: Parallel-In Serial-Out)
+// ============================================================================
+// 要件:
+// - load信号が1のときにparallel_inをロード
+// - load信号が0のときに右シフト動作
+module shift_reg_piso #(
+    parameter int WIDTH = 8
+) (
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic             load,
+    input  logic [WIDTH-1:0] parallel_in,
+    input  logic             serial_in,
+    output logic             serial_out
+);
+  // TODO: PISOシフトレジスタを実装
+
+endmodule : shift_reg_piso
+
+
+// ============================================================================
+// 例4: 双方向シフトレジスタ
+// ============================================================================
+// 要件:
+// - dir信号で方向を制御 (1=右, 0=左)
+// - 右シフト時: serial_in_rightを使用
+// - 左シフト時: serial_in_leftを使用
+module shift_reg_bidirectional #(
+    parameter int WIDTH = 8
+) (
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic             dir,            // 1=right, 0=left
+    input  logic             serial_in_right,
+    input  logic             serial_in_left,
+    output logic             serial_out_right,
+    output logic             serial_out_left,
+    output logic [WIDTH-1:0] parallel_out
+);
+  // TODO: 双方向シフトレジスタを実装
+
+endmodule : shift_reg_bidirectional
+
+
+// ============================================================================
+// 例5: ユニバーサルシフトレジスタ
+// ============================================================================
+// 要件:
+// - mode信号で動作を制御
+//   00: ホールド（変化なし）
+//   01: 右シフト
+//   10: 左シフト
+//   11: パラレルロード
+module shift_reg_universal #(
+    parameter int WIDTH = 8
+) (
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic [1:0]       mode,
+    input  logic             serial_in_right,
+    input  logic             serial_in_left,
+    input  logic [WIDTH-1:0] parallel_in,
+    output logic             serial_out_right,
+    output logic             serial_out_left,
+    output logic [WIDTH-1:0] parallel_out
+);
+  // TODO: ユニバーサルシフトレジスタを実装
+
+endmodule : shift_reg_universal
+
+
+// ============================================================================
+// 例6: リングカウンタ（循環シフトレジスタ）
+// ============================================================================
+// 要件:
+// - 最上位ビットが最下位ビットにフィードバック
+// - 初期値は1ビットのみ'1'
+module shift_reg_ring #(
+    parameter int WIDTH = 8
+) (
+    input  logic             clk,
+    input  logic             rst_n,
+    output logic [WIDTH-1:0] ring_out
+);
+  // TODO: リングカウンタを実装
+
+endmodule : shift_reg_ring
+
+
+// ============================================================================
+// 学習ポイントまとめ
+// ============================================================================
+// 1. 右シフト: {serial_in, data[WIDTH-1:1]}
+// 2. 左シフト: {data[WIDTH-2:0], serial_in}
+// 3. パラレルロード: 制御信号でロードとシフトを切り替え
+// 4. 双方向: 方向制御信号でシフト方向を選択
+// 5. ユニバーサル: モード信号で複数の動作を実現
+// 6. リング: フィードバック接続で循環動作
+//
+// 応用例:
+// - シリアル通信 (UART, SPI)
+// - データ変換 (シリアル⇔パラレル)
+// - 遅延回路
+// - パターン生成/検出
