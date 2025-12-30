@@ -148,10 +148,20 @@ module shift_register_tb;
     $display("\n[Test 1] Right Shift Register");
     sr_right_serial_in = 1;
     @(posedge clk);
-    sr_right_serial_in = 0;
-    repeat(WIDTH) @(posedge clk);
     #1;
-    $display("  Parallel out: 0x%h (expected pattern with single 1)", sr_right_parallel_out);
+    $display("  After 1 bit input: 0x%h", sr_right_parallel_out);
+    sr_right_serial_in = 0;
+    for (int i = 0; i < WIDTH-1; i++) begin
+      @(posedge clk);
+      #1;
+      $display("  After shift %0d: 0x%h", i+1, sr_right_parallel_out);
+    end
+    if (sr_right_parallel_out !== 8'h01) begin
+      $error("  FAIL: Expected 0x01, got 0x%h", sr_right_parallel_out);
+      errors++;
+    end else begin
+      $display("  PASS: Right shift correctly, result = 0x%h", sr_right_parallel_out);
+    end
 
     // -----------------------------------------------------------------
     // テスト2: 左シフトレジスタ
@@ -159,29 +169,47 @@ module shift_register_tb;
     $display("\n[Test 2] Left Shift Register");
     rst_n = 0;
     @(posedge clk);
+    #1;
     rst_n = 1;
     sr_left_serial_in = 1;
     @(posedge clk);
-    sr_left_serial_in = 0;
-    repeat(WIDTH) @(posedge clk);
     #1;
-    $display("  Parallel out: 0x%h (expected pattern with single 1)", sr_left_parallel_out);
+    $display("  After 1 bit input: 0x%h", sr_left_parallel_out);
+    sr_left_serial_in = 0;
+    for (int i = 0; i < WIDTH-1; i++) begin
+      @(posedge clk);
+      #1;
+      $display("  After shift %0d: 0x%h", i+1, sr_left_parallel_out);
+    end
+    if (sr_left_parallel_out !== 8'h80) begin
+      $error("  FAIL: Expected 0x80, got 0x%h", sr_left_parallel_out);
+      errors++;
+    end else begin
+      $display("  PASS: Left shift correctly, result = 0x%h", sr_left_parallel_out);
+    end
 
     // -----------------------------------------------------------------
     // テスト3: PISOシフトレジスタ
     // -----------------------------------------------------------------
     $display("\n[Test 3] PISO Shift Register");
-    piso_parallel_in = 8'hA5;
+    piso_parallel_in = 8'hA5;  // 10100101
     piso_load = 1;
     @(posedge clk);
-    piso_load = 0;
     #1;
-    $display("  After load: serial_out = %b", piso_serial_out);
-    repeat(WIDTH) begin
+    piso_load = 0;
+    $display("  After load: serial_out = %b (expected 1)", piso_serial_out);
+    if (piso_serial_out !== 1'b1) begin
+      $error("  FAIL: Expected serial_out=1, got %b", piso_serial_out);
+      errors++;
+    end
+
+    // シフトして全ビットを出力
+    for (int i = 0; i < WIDTH; i++) begin
       @(posedge clk);
       #1;
-      $display("  Shifted: serial_out = %b", piso_serial_out);
+      $display("  Bit %0d: serial_out = %b", i, piso_serial_out);
     end
+    $display("  PASS: PISO shift completed");
 
     // -----------------------------------------------------------------
     // テスト4: 双方向シフトレジスタ
