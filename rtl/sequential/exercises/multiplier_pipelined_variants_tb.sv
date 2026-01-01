@@ -18,8 +18,8 @@ module multiplier_pipelined_variants_tb;
 
   // 各実装のレイテンシを定義
   localparam int LATENCY_MULTISTAGE = 3;
-  localparam int LATENCY_ARRAY = 8;
-  localparam int MAX_LATENCY = 8;
+  localparam int LATENCY_ARRAY = 9;  // 8段パイプライン + product出力レジスタ
+  localparam int MAX_LATENCY = 9;
 
   // 共通信号
   logic                    clk;
