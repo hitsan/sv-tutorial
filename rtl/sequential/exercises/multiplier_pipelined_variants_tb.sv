@@ -1,10 +1,10 @@
 // パイプライン化された乗算器の各種実装 - テストベンチ
-// 5つの異なるアーキテクチャを統合的にテスト
+// 2つの異なるアーキテクチャを統合的にテスト
 //
-// TODO: このテストベンチを完成させて、5つの乗算器実装をテストしてください
+// TODO: このテストベンチを完成させて、2つの乗算器実装をテストしてください
 //
 // 要件:
-// - 5つのDUTをインスタンス化
+// - 2つのDUTをインスタンス化
 // - 共通のテストベクタで全バリアントをテスト
 // - 各バリアントのレイテンシを考慮
 // - 全バリアントが同じ結果を出力することを検証
@@ -20,10 +20,7 @@ module multiplier_pipelined_variants_tb;
 
   // TODO: 各実装のレイテンシを定義
   // localparam int LATENCY_MULTISTAGE = ?;
-  // localparam int LATENCY_BOOTH = ?;
-  // localparam int LATENCY_WALLACE = ?;
   // localparam int LATENCY_ARRAY = ?;
-  // localparam int LATENCY_CSA = ?;
   // localparam int MAX_LATENCY = ?;
 
   // 共通信号
@@ -34,16 +31,13 @@ module multiplier_pipelined_variants_tb;
 
   // TODO: 各DUTの出力信号を定義
   // logic [OUTPUT_WIDTH-1:0] product_multistage;
-  // logic [OUTPUT_WIDTH-1:0] product_booth;
-  // logic [OUTPUT_WIDTH-1:0] product_wallace;
   // logic [OUTPUT_WIDTH-1:0] product_array;
-  // logic [OUTPUT_WIDTH-1:0] product_csa;
 
   // TODO: エラーカウント変数を定義
   // int errors_multistage = 0;
-  // ...
+  // int errors_array = 0;
 
-  // TODO: 5つのDUTをインスタンス化
+  // TODO: 2つのDUTをインスタンス化
   //
   // 例:
   // multiplier_pipelined_multistage #(
@@ -56,19 +50,15 @@ module multiplier_pipelined_variants_tb;
   //     .product(product_multistage)
   // );
   //
-  // multiplier_pipelined_booth #(
-  //     .INPUT_WIDTH(INPUT_WIDTH),
-  //     .IS_SIGNED  (1'b1)  // Boothはsignedに最適
-  // ) dut_booth (
+  // multiplier_pipelined_array #(
+  //     .INPUT_WIDTH(INPUT_WIDTH)
+  // ) dut_array (
   //     .clk    (clk),
   //     .rst_n  (rst_n),
   //     .in0    (in0),
   //     .in1    (in1),
-  //     .product(product_booth)
+  //     .product(product_array)
   // );
-  //
-  // 他の3つのDUTも同様にインスタンス化してください
-  // 注: Booth以外はunsigned乗算のみでOK
 
   // クロック生成
   initial begin
