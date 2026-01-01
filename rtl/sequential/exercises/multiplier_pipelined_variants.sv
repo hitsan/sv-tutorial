@@ -71,11 +71,6 @@ endmodule : multiplier_pipelined_multistage
 // - 空間パイプライン vs 時間パイプライン
 // - レイテンシは長いが、構造が単純
 //
-// 実装ヒント:
-// - 各行でsum/carryレジスタを保持
-// - 第i行: 部分積 pp[i] を前の行の結果に加算
-// - INPUT_WIDTH個のステージ（8ステージ）
-//
 module multiplier_pipelined_array #(
     parameter int INPUT_WIDTH = 8,
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
@@ -86,10 +81,20 @@ module multiplier_pipelined_array #(
     input  logic [INPUT_WIDTH-1:0]   in1,
     output logic [OUTPUT_WIDTH-1:0]  product
 );
-
-    // TODO: アレイ乗算器のパイプライン構造を実装
-    // - 各行のレジスタを定義（row_sum, row_carry）
-    // - 各行で部分積を生成し、前の行の結果に加算
-    // - 最終行の結果を出力
-
+  logic [OUTPUT_WIDTH-1:0] sum[INPUT_WIDTH];
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      for (int i = 0; i < INPUT_WIDTH; i++) begin
+        sum[i] <= '0;
+      end
+      product <= '0;
+    end 
+    else begin
+      sum[0] <= in0 & {INPUT_WIDTH{in1[0]}};
+      for (int i = 1; i < INPUT_WIDTH; i++) begin
+        sum[i] <= sum[i-1] + ((OUTPUT_WIDTH'(in0) & {OUTPUT_WIDTH{in1[i]}}) << i);
+      end
+      product <= sum[INPUT_WIDTH-1];
+    end
+  end
 endmodule : multiplier_pipelined_array
