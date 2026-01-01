@@ -31,7 +31,6 @@
 module multiplier_pipelined_multistage #(
     parameter int INPUT_WIDTH = 8,
     parameter int NUM_STAGES = 3,  // 3 or 4
-    parameter bit IS_SIGNED = 1'b0,
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
     input  logic                     clk,
@@ -44,7 +43,7 @@ module multiplier_pipelined_multistage #(
     // TODO: NUM_STAGESに応じて3ステージまたは4ステージのパイプラインを実装
     // - generate文を使用してステージ数で分岐
     // - 各ステージにレジスタを配置
-    // - IS_SIGNEDパラメータに応じてsigned/unsigned乗算を選択
+    // - unsigned乗算のみでOK
 
 endmodule : multiplier_pipelined_multistage
 
@@ -72,16 +71,18 @@ endmodule : multiplier_pipelined_multistage
 // - アルゴリズムによる部分積数の削減（8個→4-5個）
 // - 符号付き演算がハードウェアで自然に処理される仕組み
 // - ハードウェアとアルゴリズムの関係
+// - Boothアルゴリズムが特にsigned乗算で有利な理由
 //
 // 実装ヒント（教育的簡略版）:
 // - 完全なBoothアルゴリズムは複雑なため、基本構造のみ実装
 // - Stage 1: 入力レジスタ
 // - Stage 2: 乗数を1ビット拡張（Booth用）
 // - Stage 3: 乗算実行 + 出力
+// - IS_SIGNEDでsigned/unsignedを切り替え（generateまたはif文）
 //
 module multiplier_pipelined_booth #(
     parameter int INPUT_WIDTH = 8,
-    parameter bit IS_SIGNED = 1'b0,
+    parameter bit IS_SIGNED = 1'b1,  // Boothはsignedに有利
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
     input  logic                     clk,
@@ -92,8 +93,8 @@ module multiplier_pipelined_booth #(
 );
 
     // TODO: Boothエンコーディングを使用した3ステージパイプラインを実装
-    // 注: 教育的簡略版として、完全なBoothアルゴリズムではなく
-    // 基本的な3ステージパイプラインで構造を示してください
+    // - IS_SIGNEDパラメータでsigned/unsigned乗算を切り替え
+    // - signed版ではsigned'()キャストを使用
 
 endmodule : multiplier_pipelined_booth
 
@@ -126,7 +127,6 @@ endmodule : multiplier_pipelined_booth
 //
 module multiplier_pipelined_wallace #(
     parameter int INPUT_WIDTH = 8,
-    parameter bit IS_SIGNED = 1'b0,
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
     input  logic                     clk,
@@ -171,7 +171,6 @@ endmodule : multiplier_pipelined_wallace
 //
 module multiplier_pipelined_array #(
     parameter int INPUT_WIDTH = 8,
-    parameter bit IS_SIGNED = 1'b0,
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
     input  logic                     clk,
@@ -215,7 +214,6 @@ endmodule : multiplier_pipelined_array
 //
 module multiplier_pipelined_csa #(
     parameter int INPUT_WIDTH = 8,
-    parameter bit IS_SIGNED = 1'b0,
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
     input  logic                     clk,

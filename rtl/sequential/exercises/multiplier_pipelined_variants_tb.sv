@@ -48,8 +48,7 @@ module multiplier_pipelined_variants_tb;
   // 例:
   // multiplier_pipelined_multistage #(
   //     .INPUT_WIDTH(INPUT_WIDTH),
-  //     .NUM_STAGES (3),
-  //     .IS_SIGNED  (1'b0)
+  //     .NUM_STAGES (3)
   // ) dut_multistage (
   //     .clk    (clk),
   //     .rst_n  (rst_n),
@@ -58,7 +57,19 @@ module multiplier_pipelined_variants_tb;
   //     .product(product_multistage)
   // );
   //
-  // 他の4つのDUTも同様にインスタンス化してください
+  // multiplier_pipelined_booth #(
+  //     .INPUT_WIDTH(INPUT_WIDTH),
+  //     .IS_SIGNED  (1'b1)  // Boothはsignedに最適
+  // ) dut_booth (
+  //     .clk    (clk),
+  //     .rst_n  (rst_n),
+  //     .in0    (in0),
+  //     .in1    (in1),
+  //     .product(product_booth)
+  // );
+  //
+  // 他の3つのDUTも同様にインスタンス化してください
+  // 注: Booth以外はunsigned乗算のみでOK
 
   // クロック生成
   initial begin
