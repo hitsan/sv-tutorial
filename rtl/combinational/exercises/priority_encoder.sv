@@ -9,14 +9,13 @@
 `timescale 1ns / 100ps
 
 module priority_encoder #(
-  parameter int NUM_INPUTS = 4
+  parameter int NUM_INPUTS = 4,
+  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS)
 ) (
   input  logic [NUM_INPUTS-1:0] inputs,
   output logic [NUM_OUTPUTS-1:0] result,
   output logic valid
 );
-  localparam int NUM_OUTPUTS = $clog2(NUM_INPUTS);
-
   always_comb begin
     result = '0;
     valid = 1'b0;

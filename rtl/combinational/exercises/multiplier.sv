@@ -10,7 +10,7 @@ module multiplier #(
 ) (
   input logic [INPUT_WIDTH-1:0] in0,
   input logic [INPUT_WIDTH-1:0] in1,
-  output logic [OUTPUT_WIDTH-1:0] product
+  output logic signed [OUTPUT_WIDTH-1:0] product
 );
 
   generate
