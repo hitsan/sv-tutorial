@@ -3,9 +3,8 @@
 
 `timescale 1ns / 100ps
 
-import alu_pkg::*;
-
 module alu_tb;
+  import alu_pkg::*;
 
   parameter int WIDTH = 32;
   parameter int NUM_TESTS = 100;

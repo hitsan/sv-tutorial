@@ -9,7 +9,8 @@
 // - 結果とともにステータスフラグ（zero, overflow, negative）を出力
 
 module alu #(
-  parameter int WIDTH = 32
+  parameter int WIDTH = 32,
+  localparam int SHAMT_W = $clog2(WIDTH)
 ) (
   input logic [WIDTH-1:0] in0,
   input logic [WIDTH-1:0] in1,
@@ -20,7 +21,6 @@ module alu #(
   output logic negative
 );
   import alu_pkg::*;
-  localparam int SHAMT_W = (WIDTH <= 1) ? 1 : $clog2(WIDTH);
   always_comb begin
     result = '0;
     zero = 1'b0;
