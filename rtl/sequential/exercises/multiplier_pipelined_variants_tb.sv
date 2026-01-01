@@ -47,8 +47,7 @@ module multiplier_pipelined_variants_tb;
   //
   // 例:
   // multiplier_pipelined_multistage #(
-  //     .INPUT_WIDTH(INPUT_WIDTH),
-  //     .NUM_STAGES (3)
+  //     .INPUT_WIDTH(INPUT_WIDTH)
   // ) dut_multistage (
   //     .clk    (clk),
   //     .rst_n  (rst_n),

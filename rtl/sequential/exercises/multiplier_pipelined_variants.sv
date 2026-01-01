@@ -2,7 +2,7 @@
 // 様々なアーキテクチャのパイプライン乗算器を学習するための実装集
 //
 // このファイルには5つの異なるパイプラインアーキテクチャが含まれています:
-// 1. Multi-Stage Pipeline: 基本的な多段パイプライン (3-4ステージ)
+// 1. Multi-Stage Pipeline: 基本的な3ステージパイプライン
 // 2. Booth Encoding: Radix-2 Booth符号化による部分積削減
 // 3. Wallace Tree: 並列加算ツリーによる高速化
 // 4. Array Multiplier: シストリックアレイ構造
@@ -11,11 +11,10 @@
 `timescale 1ns / 100ps
 
 // ============================================================================
-// 例1: Multi-Stage Pipeline (3-4ステージ)
+// 例1: Multi-Stage Pipeline (3ステージ)
 // ============================================================================
 // 要件:
-// - 基本的な2ステージパイプラインを3-4ステージに拡張
-// - パラメータでステージ数を制御可能 (3 or 4)
+// - 基本的な2ステージパイプラインを3ステージに拡張
 // - 各ステージでバランスよく処理を分散
 //
 // 学習ポイント:
@@ -23,14 +22,13 @@
 // - ステージ数を増やすことでクリティカルパスを短縮
 // - レイテンシは増加するがスループットは維持
 //
-// 実装ヒント:
-// - 3ステージ: 入力レジスタ → 乗算レジスタ → 出力レジスタ
-// - 4ステージ: 入力レジスタ → 中間レジスタ → 乗算レジスタ → 出力レジスタ
-// - generate文でNUM_STAGESに応じて分岐
+// パイプライン構成:
+// - Stage 1: 入力レジスタ (in0_r, in1_r)
+// - Stage 2: 乗算レジスタ (mul_r)
+// - Stage 3: 出力レジスタ (product)
 //
 module multiplier_pipelined_multistage #(
     parameter int INPUT_WIDTH = 8,
-    parameter int NUM_STAGES = 3,  // 3 or 4
     localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
     input  logic                     clk,
@@ -39,12 +37,21 @@ module multiplier_pipelined_multistage #(
     input  logic [INPUT_WIDTH-1:0]   in1,
     output logic [OUTPUT_WIDTH-1:0]  product
 );
-
-    // TODO: NUM_STAGESに応じて3ステージまたは4ステージのパイプラインを実装
-    // - generate文を使用してステージ数で分岐
-    // - 各ステージにレジスタを配置
-    // - unsigned乗算のみでOK
-
+  logic [INPUT_WIDTH-1:0] in0_r;
+  logic [INPUT_WIDTH-1:0] in1_r;
+  logic [OUTPUT_WIDTH-1:0] mul_r;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      in0_r <= '0;
+      in1_r <= '0;
+      product <= '0;
+    end else begin
+      in0_r <= in0;
+      in1_r <= in1;
+      mul_r <= in0_r * in1_r;
+      product <= mul_r;
+    end
+  end
 endmodule : multiplier_pipelined_multistage
 
 
