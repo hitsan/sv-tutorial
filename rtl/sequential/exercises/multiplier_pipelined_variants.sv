@@ -90,7 +90,7 @@ module multiplier_pipelined_array #(
       product <= '0;
     end 
     else begin
-      sum[0] <= in0 & {INPUT_WIDTH{in1[0]}};
+      sum[0] <= OUTPUT_WIDTH'(in0) & {OUTPUT_WIDTH{in1[0]}};
       for (int i = 1; i < INPUT_WIDTH; i++) begin
         sum[i] <= sum[i-1] + ((OUTPUT_WIDTH'(in0) & {OUTPUT_WIDTH{in1[i]}}) << i);
       end
