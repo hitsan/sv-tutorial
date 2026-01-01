@@ -22,16 +22,9 @@ module alu #(
   output logic overflow,
   output logic negative
 );
-
-  // TODO: 演算コードの定義
-  // - 加算、減算
-  // - 論理演算（AND, OR, XOR）
-  // - シフト演算（左シフト、右論理シフト、右算術シフト）
-  // - 比較演算（signed/unsigned）
-
-  // TODO: opcodeに応じた演算の実装
-
+  localparam int SHAMT_W = (WIDTH <= 1) ? 1 : $clog2(WIDTH);
   always_comb begin
+    result = '0;
     zero = 1'b0;
     overflow = 1'b0;
     negative = 1'b0;
@@ -40,39 +33,33 @@ module alu #(
       ALU_ADD: begin
         result = in0 + in1;
         overflow = (in0[WIDTH-1] == in1[WIDTH-1]) && (result[WIDTH-1] != in0[WIDTH-1]);
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
       end
       ALU_SUB: begin
         result = in0 - in1;
         overflow = (in0[WIDTH-1] != in1[WIDTH-1]) && (result[WIDTH-1] != in0[WIDTH-1]);
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
       end
       ALU_AND: begin
         result = in0 & in1;
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
       end
       ALU_OR: begin
         result = in0 | in1;
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
       end
       ALU_XOR: begin
         result = in0 ^ in1;
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
       end
       ALU_SLL: begin
-        result = in0 << in1[4:0];
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
+        result = in0 << in1[SHAMT_W-1:0];
       end
       ALU_SRL: begin
-        result = in0 >> in1[4:0];
+        result = in0 >> in1[SHAMT_W-1:0];
       end
       ALU_SRA: begin
-        result = signed'(in0) >>> in1[4:0];
-        negative = (result[WIDTH-1]) ? 1'b1 : 1'b0;
+        result = signed'(in0) >>> in1[SHAMT_W-1:0];
       end
       ALU_SLT: result = signed'(in0) < signed'(in1);
       ALU_SLTU: result = in0 < in1;
     endcase
-    zero = (result == 32'b0) ? 1'b1 : 1'b0;
+    negative = result[WIDTH-1];
+    zero = (result == '0) ? 1'b1 : 1'b0;
   end
 endmodule
