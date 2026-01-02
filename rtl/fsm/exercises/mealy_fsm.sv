@@ -22,7 +22,36 @@ module edge_detector_mealy (
     input  logic data_in,
     output logic edge_detected
 );
-    // ここに実装
+  typedef enum logic {
+    IDLE = 1'b0,
+    HIGH = 1'b1
+  } state_t;
+
+  state_t current_state;
+  state_t next_state;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      current_state <= IDLE;
+    end else begin
+      current_state <= next_state;
+    end
+  end
+
+  always_comb begin
+    next_state = current_state;
+    case (current_state)
+      IDLE: if (data_in) next_state = HIGH;
+      HIGH: if (!data_in) next_state = IDLE;
+    endcase
+  end
+
+  always_comb begin
+    edge_detected = 1'b0;
+    case (current_state)
+      IDLE: if (data_in) edge_detected = 1'b1;
+      HIGH: edge_detected = 1'b0;
+    endcase
+  end
 endmodule : edge_detector_mealy
 
 
@@ -40,7 +69,35 @@ module edge_detector_moore (
     input  logic data_in,
     output logic edge_detected
 );
-    // ここに実装
+  typedef enum logic [1:0] {
+    IDLE = 2'b00,
+    DETECTED = 2'b01,
+    HIGH = 2'b10
+  } state_t;
+
+  state_t current_state;
+  state_t next_state;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      current_state <= IDLE;
+    end else begin
+      current_state <= next_state;
+    end
+  end
+
+  always_comb begin
+    next_state = current_state;
+    case (current_state)
+      IDLE: if (data_in) next_state = DETECTED;
+      DETECTED: begin
+        if (data_in) next_state = HIGH;
+        else next_state = IDLE;
+      end
+      HIGH: if (!data_in) next_state = IDLE;
+    endcase
+  end
+  assign edge_detected = (current_state == DETECTED);
+
 endmodule : edge_detector_moore
 
 
