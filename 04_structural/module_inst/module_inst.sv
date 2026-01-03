@@ -23,6 +23,15 @@
  *    sel[1]──────────────────────┘
  */
 
+module mux2x1 (
+    input  logic in0,
+    input  logic in1,
+    input  logic sel,
+    output logic out
+);
+  assign out = sel ? in1 : in0;
+endmodule : mux2x1
+
 module mux4x1_structural (
     input  logic [3:0] in,
     input  logic [1:0] sel,
@@ -30,21 +39,21 @@ module mux4x1_structural (
 );
   logic out0;
   logic out1;
-  mux2x1_assign mux0 (
+  mux2x1 mux0 (
       .in0(in[0]),
       .in1(in[1]),
       .sel(sel[0]),
       .out(out0)
   );
 
-  mux2x1_assign mux1 (
+  mux2x1 mux1 (
       .in0(in[2]),
       .in1(in[3]),
       .sel(sel[0]),
       .out(out1)
   );
 
-  mux2x1_assign mux2 (
+  mux2x1 mux2 (
       .in0(out0),
       .in1(out1),
       .sel(sel[1]),

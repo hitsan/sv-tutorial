@@ -19,8 +19,8 @@ module module_inst_tb;
     // Test all combinations
     for (int s = 0; s < 4; s++) begin
       for (int i = 0; i < 16; i++) begin
-        in  = i;
-        sel = s;
+        in  = 4'(i);
+        sel = 2'(s);
         #1;
 
         // Expected output is in[sel]
