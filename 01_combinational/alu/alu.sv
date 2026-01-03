@@ -8,6 +8,8 @@
 // - opcodeで演算を選択し、2つの入力オペランドに対して演算を実行
 // - 結果とともにステータスフラグ（zero, overflow, negative）を出力
 
+import alu_pkg::*;
+
 module alu #(
   parameter int WIDTH = 32,
   localparam int SHAMT_W = $clog2(WIDTH)
@@ -20,7 +22,6 @@ module alu #(
   output logic overflow,
   output logic negative
 );
-  import alu_pkg::*;
   always_comb begin
     result = '0;
     zero = 1'b0;
@@ -54,8 +55,8 @@ module alu #(
       ALU_SRA: begin
         result = signed'(in0) >>> in1[SHAMT_W-1:0];
       end
-      ALU_SLT: result = signed'(in0) < signed'(in1);
-      ALU_SLTU: result = in0 < in1;
+      ALU_SLT: result = {{(WIDTH-1){1'b0}}, (signed'(in0) < signed'(in1))};
+      ALU_SLTU: result = {{(WIDTH-1){1'b0}}, (in0 < in1)};
       default: ;
     endcase
     negative = result[WIDTH-1];
