@@ -29,14 +29,25 @@ module adder_tree #(
     input  logic [WIDTH-1:0] in [N-1:0],  // N個の入力
     output logic [WIDTH-1:0] sum          // 合計
 );
-    // ここに実装
-    // ヒント:
-    // 1. localparam LEVELS = $clog2(N); でレベル数を計算
-    // 2. logic [WIDTH-1:0] level [LEVELS:0] [N-1:0]; で各レベルのデータを宣言
-    // 3. level[0] = in; で初期化
-    // 4. 2重ループのfor generateでツリー構造を生成
-    //    外側: レベル (0からLEVELS-1)
-    //    内側: 各レベルの加算器 (0から(N>>(level+1))-1)
-    // 5. sum = level[LEVELS][0]; で最終結果
+    localparam int LEVELS = $clog2(N);
+    logic [WIDTH-1:0] level [0:LEVELS][0:N-1];
+
+    always_comb begin
+        for (int l = 0; l <= LEVELS; l++) begin
+            for (int i = 0; i < N; i++) begin
+                level[l][i] = '0;
+            end
+        end
+        for (int i = 0; i < N; i++) begin
+            level[0][i] = in[i];
+        end
+        for (int l = 0; l < LEVELS; l++) begin
+            for (int j = 0; j < (N >> (l + 1)); j++) begin
+                level[l + 1][j] = level[l][2 * j] + level[l][2 * j + 1];
+            end
+        end
+    end
+
+    assign sum = level[LEVELS][0];
 
 endmodule : adder_tree
