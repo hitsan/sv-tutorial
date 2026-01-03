@@ -71,6 +71,7 @@ module handshake_controller_tb;
 
     // Test 2: readyが遅れる場合
     $display("\nTest 2: Ready delayed");
+    repeat(2) @(posedge clk);  // IDLE状態に戻るまで待つ
     @(negedge clk);
     start = 1;
     @(negedge clk);
@@ -78,6 +79,7 @@ module handshake_controller_tb;
 
     @(posedge clk);
     #1;
+    $display("  Debug: state=%b, valid=%b, ack=%b", dut.state_c, valid, ack);
     if (valid && !ack) $display("  PASS: valid=1, ack=0 (waiting for ready)");
     else $display("  FAIL: valid=%b, ack=%b", valid, ack);
 
@@ -119,19 +121,25 @@ module handshake_controller_tb;
 
     // Test 4: Moore型とMealy型の違いを確認
     $display("\nTest 4: Moore vs Mealy timing");
+    repeat(2) @(posedge clk);  // IDLE状態に戻るまで待つ
     @(negedge clk);
     start = 1;
-    ready = 1;  // startと同時にreadyもアサート
     @(negedge clk);
     start = 0;
 
-    @(posedge clk);
+    @(posedge clk);  // ACTIVE状態へ遷移
     #1;
-    $display("  After 1st clock:");
-    $display("    valid=%b (Moore: ACTIVE state)", valid);
-    $display("    ack=%b (Mealy: ACTIVE state && ready)", ack);
+    // ACTIVE状態でready=0のとき
+    $display("  ACTIVE state, ready=0: valid=%b, ack=%b", valid, ack);
+    if (valid && !ack) $display("  PASS: valid=1 (Moore), ack=0 (Mealy needs ready)");
+    else $display("  FAIL: valid=%b, ack=%b", valid, ack);
 
-    if (valid && ack) $display("  PASS: Both asserted immediately");
+    // readyをアサート（posedgeの前）
+    @(negedge clk);
+    ready = 1;
+    #1;  // 組み合わせ回路の安定待ち（posedge前）
+    $display("  ACTIVE state, ready=1: valid=%b, ack=%b", valid, ack);
+    if (valid && ack) $display("  PASS: valid=1 (Moore), ack=1 (Mealy)");
     else $display("  FAIL: valid=%b, ack=%b", valid, ack);
 
     @(posedge clk);
