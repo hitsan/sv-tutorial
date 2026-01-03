@@ -1,5 +1,5 @@
-ref/*
-!ref/clone_refs.sh
+reference/*
+!reference/clone_refs.sh
 
 # Verilator/シミュレータ生成ファイル
 obj_*/
