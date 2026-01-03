@@ -21,15 +21,15 @@ module alu_tb;
 
   // DUT（Design Under Test）のインスタンス化
   alu #(
-    .WIDTH(WIDTH)
+      .WIDTH(WIDTH)
   ) DUT (
-    .in0(in0),
-    .in1(in1),
-    .opcode(opcode),
-    .result(result),
-    .zero(zero),
-    .overflow(overflow),
-    .negative(negative)
+      .in0(in0),
+      .in1(in1),
+      .opcode(opcode),
+      .result(result),
+      .zero(zero),
+      .overflow(overflow),
+      .negative(negative)
   );
 
   // テストシーケンス
@@ -60,15 +60,15 @@ module alu_tb;
             // 符号付き減算のオーバーフロー: 異符号を引いて異符号になった場合
             expected_overflow = (in0[WIDTH-1] != in1[WIDTH-1]) && (expected_result[WIDTH-1] != in0[WIDTH-1]);
           end
-          ALU_AND: expected_result = in0 & in1;
-          ALU_OR:  expected_result = in0 | in1;
-          ALU_XOR: expected_result = in0 ^ in1;
-          ALU_SLL: expected_result = in0 << in1[4:0];
-          ALU_SRL: expected_result = in0 >> in1[4:0];
-          ALU_SRA: expected_result = $signed(in0) >>> in1[4:0];
-          ALU_SLT: expected_result = {{(WIDTH-1){1'b0}}, ($signed(in0) < $signed(in1))};
-          ALU_SLTU: expected_result = {{(WIDTH-1){1'b0}}, (in0 < in1)};
-          default: expected_result = '0;
+          ALU_AND:  expected_result = in0 & in1;
+          ALU_OR:   expected_result = in0 | in1;
+          ALU_XOR:  expected_result = in0 ^ in1;
+          ALU_SLL:  expected_result = in0 << in1[4:0];
+          ALU_SRL:  expected_result = in0 >> in1[4:0];
+          ALU_SRA:  expected_result = $signed(in0) >>> in1[4:0];
+          ALU_SLT:  expected_result = {{(WIDTH - 1) {1'b0}}, ($signed(in0) < $signed(in1))};
+          ALU_SLTU: expected_result = {{(WIDTH - 1) {1'b0}}, (in0 < in1)};
+          default:  expected_result = '0;
         endcase
 
         expected_zero = (expected_result == 0);
@@ -76,28 +76,29 @@ module alu_tb;
 
         // 結果を検証
         if (result !== expected_result) begin
-          $error("[%0t] %s: result mismatch - in0=%h, in1=%h, got=%h, expected=%h",
-                 $realtime, opcode.name(), in0, in1, result, expected_result);
+          $error("[%0t] %s: result mismatch - in0=%h, in1=%h, got=%h, expected=%h", $realtime,
+                 opcode.name(), in0, in1, result, expected_result);
           errors++;
         end
 
         if (zero !== expected_zero) begin
-          $error("[%0t] %s: zero flag mismatch - got=%b, expected=%b",
-                 $realtime, opcode.name(), zero, expected_zero);
+          $error("[%0t] %s: zero flag mismatch - got=%b, expected=%b", $realtime, opcode.name(),
+                 zero, expected_zero);
           errors++;
         end
 
         if (negative !== expected_negative && (opcode == ALU_ADD || opcode == ALU_SUB ||
             opcode == ALU_AND || opcode == ALU_OR || opcode == ALU_XOR ||
             opcode == ALU_SLL || opcode == ALU_SRA)) begin
-          $error("[%0t] %s: negative flag mismatch - got=%b, expected=%b",
-                 $realtime, opcode.name(), negative, expected_negative);
+          $error("[%0t] %s: negative flag mismatch - got=%b, expected=%b", $realtime,
+                 opcode.name(), negative, expected_negative);
           errors++;
         end
 
         if ((opcode == ALU_ADD || opcode == ALU_SUB) && (overflow !== expected_overflow)) begin
-          $error("[%0t] %s: overflow flag mismatch - in0=%h, in1=%h, result=%h, got=%b, expected=%b",
-                 $realtime, opcode.name(), in0, in1, result, overflow, expected_overflow);
+          $error(
+              "[%0t] %s: overflow flag mismatch - in0=%h, in1=%h, result=%h, got=%b, expected=%b",
+              $realtime, opcode.name(), in0, in1, result, overflow, expected_overflow);
           errors++;
         end
       end
