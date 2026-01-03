@@ -140,7 +140,7 @@ module pulse_generator_mealy (
     case (state_c)
       IDLE: if (start) state_n = PULSE;
       PULSE: begin
-        if (count >= 3) begin
+        if (count > 4) begin
           state_n = IDLE;
         end
       end
@@ -154,7 +154,7 @@ module pulse_generator_mealy (
         if (start) pulse = 1'b1;
       end
       PULSE: begin
-        if (count < 3) pulse = 1'b1;
+        if (count < 4) pulse = 1'b1;
       end
     endcase
   end

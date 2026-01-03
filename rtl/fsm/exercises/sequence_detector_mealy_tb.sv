@@ -22,7 +22,7 @@ module sequence_detector_mealy_tb;
 
   // Helper task to send bit
   task send_bit(input logic bit_val);
-    @(posedge clk);
+    @(negedge clk);  // クロックの中間で入力変更（Mealy型用）
     data_in = bit_val;
   endtask
 
@@ -43,10 +43,10 @@ module sequence_detector_mealy_tb;
     send_bit(0);  // 10
     send_bit(1);  // 101
     send_bit(1);  // 1011 - ここで検出
-    @(posedge clk);
-    #1;
+    #1;  // 組み合わせ回路の安定待ち（posedge前）
     if (detected) $display("PASS: '1011' detected");
     else $display("FAIL: '1011' not detected");
+    @(posedge clk);  // 状態更新
 
     // Test 2: オーバーラップ検出 "10111011"
     $display("\nTest 2: Overlapping detection '1011-1011'");
@@ -59,6 +59,7 @@ module sequence_detector_mealy_tb;
     #1;
     if (detected) $display("  First '1011': PASS");
     else $display("  First '1011': FAIL");
+    @(posedge clk);
 
     send_bit(1);  // 11 (前の最後の"1"を再利用)
     send_bit(0);  // 110 -> 10
@@ -67,6 +68,7 @@ module sequence_detector_mealy_tb;
     #1;
     if (detected) $display("  Second '1011' (overlap): PASS");
     else $display("  Second '1011' (overlap): FAIL");
+    @(posedge clk);
 
     // Test 3: 不一致パターン "1010"
     $display("\nTest 3: Non-matching sequence '1010'");
@@ -79,6 +81,7 @@ module sequence_detector_mealy_tb;
     #1;
     if (!detected) $display("PASS: '1010' not detected");
     else $display("FAIL: '1010' incorrectly detected");
+    @(posedge clk);
 
     // Test 4: 連続した1 "1111011"
     $display("\nTest 4: Multiple 1's then '1011'");
@@ -93,6 +96,7 @@ module sequence_detector_mealy_tb;
     #1;
     if (detected) $display("PASS: '1011' detected after multiple 1's");
     else $display("FAIL: '1011' not detected");
+    @(posedge clk);
 
     #20;
     $display("\n=== sequence_detector_mealy Test Complete ===");
