@@ -84,7 +84,7 @@ module param_design_tb;
     $display("\nTest 5: Random tests");
     for (int test = 0; test < 20; test++) begin
       for (int i = 0; i < N; i++) begin
-        in[i] = $urandom_range(0, 255);
+        in[i] = WIDTH'($urandom_range(0, 255));
       end
       #1;
       if (sum != calc_expected_sum()) begin
@@ -98,13 +98,9 @@ module param_design_tb;
     $display("  PASS: 20 random tests completed");
 
     $display("\n=== adder_tree Test Complete ===");
-    $finish;
   end
 
-endmodule
-
-// 追加テスト: 異なるパラメータでのインスタンス化
-module param_design_extended_tb;
+  // 追加テスト: 異なるパラメータでのインスタンス化
   // Test with N=8, WIDTH=16
   localparam int WIDTH2 = 16;
   localparam int N2 = 8;
@@ -141,7 +137,7 @@ module param_design_extended_tb;
     // Test N=8, WIDTH=16
     $display("\nTest: N=8, WIDTH=16");
     for (int i = 0; i < N2; i++) begin
-      in2[i] = 16'd1000 + i * 100;
+      in2[i] = WIDTH2'(16'd1000 + i * 100);
     end
     #1;
     $display("  Input: 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700");
@@ -156,7 +152,6 @@ module param_design_extended_tb;
     $display("  Sum: %0d (expected: 0, wraps in 4-bit)", sum3);
 
     $display("\n=== All Tests Complete ===");
-    $finish;
   end
 
 endmodule
