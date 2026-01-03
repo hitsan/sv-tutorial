@@ -1,6 +1,8 @@
 // UART送受信コントローラ - 演習問題
 // 実践的なFSMの例
 
+`timescale 1ns / 100ps
+
 /*
  * UART (Universal Asynchronous Receiver/Transmitter)
  *
