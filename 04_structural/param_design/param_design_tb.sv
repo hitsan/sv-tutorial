@@ -5,16 +5,16 @@ module param_design_tb;
   localparam int WIDTH = 8;
   localparam int N = 4;
 
-  logic [WIDTH-1:0] in [N-1:0];
+  logic [WIDTH-1:0] in  [N-1:0];
   logic [WIDTH-1:0] sum;
 
   // DUT instantiation
   adder_tree #(
-    .WIDTH(WIDTH),
-    .N(N)
+      .WIDTH(WIDTH),
+      .N(N)
   ) dut (
-    .in(in),
-    .sum(sum)
+      .in (in),
+      .sum(sum)
   );
 
   // Expected sum calculation
@@ -38,10 +38,8 @@ module param_design_tb;
     in[3] = 8'd40;
     #1;
     if (sum == calc_expected_sum())
-      $display("  PASS: %0d + %0d + %0d + %0d = %0d",
-               in[0], in[1], in[2], in[3], sum);
-    else
-      $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
+      $display("  PASS: %0d + %0d + %0d + %0d = %0d", in[0], in[1], in[2], in[3], sum);
+    else $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
 
     // Test 2: ゼロを含む
     $display("\nTest 2: With zeros");
@@ -51,10 +49,8 @@ module param_design_tb;
     in[3] = 8'd55;
     #1;
     if (sum == calc_expected_sum())
-      $display("  PASS: %0d + %0d + %0d + %0d = %0d",
-               in[0], in[1], in[2], in[3], sum);
-    else
-      $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
+      $display("  PASS: %0d + %0d + %0d + %0d = %0d", in[0], in[1], in[2], in[3], sum);
+    else $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
 
     // Test 3: オーバーフロー
     $display("\nTest 3: Overflow");
@@ -64,10 +60,15 @@ module param_design_tb;
     in[3] = 8'd50;
     #1;
     if (sum == calc_expected_sum())
-      $display("  PASS: %0d + %0d + %0d + %0d = %0d (overflow, wraps to 8-bit)",
-               in[0], in[1], in[2], in[3], sum);
-    else
-      $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
+      $display(
+          "  PASS: %0d + %0d + %0d + %0d = %0d (overflow, wraps to 8-bit)",
+          in[0],
+          in[1],
+          in[2],
+          in[3],
+          sum
+      );
+    else $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
 
     // Test 4: 最大値
     $display("\nTest 4: Maximum values");
@@ -76,10 +77,8 @@ module param_design_tb;
     in[2] = 8'd255;
     in[3] = 8'd255;
     #1;
-    if (sum == calc_expected_sum())
-      $display("  PASS: 255 + 255 + 255 + 255 = %0d (wrapped)", sum);
-    else
-      $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
+    if (sum == calc_expected_sum()) $display("  PASS: 255 + 255 + 255 + 255 = %0d (wrapped)", sum);
+    else $display("  FAIL: sum=%0d, expected=%0d", sum, calc_expected_sum());
 
     // Test 5: ランダムテスト
     $display("\nTest 5: Random tests");
@@ -110,30 +109,30 @@ module param_design_extended_tb;
   localparam int WIDTH2 = 16;
   localparam int N2 = 8;
 
-  logic [WIDTH2-1:0] in2 [N2-1:0];
+  logic [WIDTH2-1:0] in2  [N2-1:0];
   logic [WIDTH2-1:0] sum2;
 
   adder_tree #(
-    .WIDTH(WIDTH2),
-    .N(N2)
+      .WIDTH(WIDTH2),
+      .N(N2)
   ) dut2 (
-    .in(in2),
-    .sum(sum2)
+      .in (in2),
+      .sum(sum2)
   );
 
   // Test with N=2, WIDTH=4
   localparam int WIDTH3 = 4;
   localparam int N3 = 2;
 
-  logic [WIDTH3-1:0] in3 [N3-1:0];
+  logic [WIDTH3-1:0] in3  [N3-1:0];
   logic [WIDTH3-1:0] sum3;
 
   adder_tree #(
-    .WIDTH(WIDTH3),
-    .N(N3)
+      .WIDTH(WIDTH3),
+      .N(N3)
   ) dut3 (
-    .in(in3),
-    .sum(sum3)
+      .in (in3),
+      .sum(sum3)
   );
 
   initial begin

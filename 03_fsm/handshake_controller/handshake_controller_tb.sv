@@ -10,12 +10,12 @@ module handshake_controller_tb;
 
   // DUT instantiation
   handshake_controller dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .start(start),
-    .ready(ready),
-    .valid(valid),
-    .ack(ack)
+      .clk  (clk),
+      .rst_n(rst_n),
+      .start(start),
+      .ready(ready),
+      .valid(valid),
+      .ack  (ack)
   );
 
   // Clock generation (10ns period)
@@ -32,7 +32,7 @@ module handshake_controller_tb;
     rst_n = 0;
     start = 0;
     ready = 0;
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     rst_n = 1;
     @(posedge clk);
 
@@ -71,7 +71,7 @@ module handshake_controller_tb;
 
     // Test 2: readyが遅れる場合
     $display("\nTest 2: Ready delayed");
-    repeat(2) @(posedge clk);  // IDLE状態に戻るまで待つ
+    repeat (2) @(posedge clk);  // IDLE状態に戻るまで待つ
     @(negedge clk);
     start = 1;
     @(negedge clk);
@@ -84,7 +84,7 @@ module handshake_controller_tb;
     else $display("  FAIL: valid=%b, ack=%b", valid, ack);
 
     // 3サイクル待ってからready
-    repeat(3) @(posedge clk);
+    repeat (3) @(posedge clk);
     @(negedge clk);
     ready = 1;
     #1;
@@ -97,7 +97,7 @@ module handshake_controller_tb;
 
     // Test 3: 連続したハンドシェイク
     $display("\nTest 3: Multiple handshakes");
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
 
     for (int i = 0; i < 3; i++) begin
       @(negedge clk);
@@ -107,12 +107,12 @@ module handshake_controller_tb;
 
       @(posedge clk);
       #1;
-      if (valid) $display("  Handshake %0d: valid asserted", i+1);
+      if (valid) $display("  Handshake %0d: valid asserted", i + 1);
 
       @(negedge clk);
       ready = 1;
       #1;
-      if (ack) $display("  Handshake %0d: ack asserted", i+1);
+      if (ack) $display("  Handshake %0d: ack asserted", i + 1);
 
       @(posedge clk);
       ready = 0;
@@ -121,7 +121,7 @@ module handshake_controller_tb;
 
     // Test 4: Moore型とMealy型の違いを確認
     $display("\nTest 4: Moore vs Mealy timing");
-    repeat(2) @(posedge clk);  // IDLE状態に戻るまで待つ
+    repeat (2) @(posedge clk);  // IDLE状態に戻るまで待つ
     @(negedge clk);
     start = 1;
     @(negedge clk);
@@ -145,7 +145,7 @@ module handshake_controller_tb;
     @(posedge clk);
     ready = 0;
 
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     $display("\n=== handshake_controller Test Complete ===");
     $finish;
   end

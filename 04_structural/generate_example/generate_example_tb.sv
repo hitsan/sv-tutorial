@@ -8,11 +8,11 @@ module generate_example_tb;
 
   // DUT instantiation
   ripple_carry_adder_8bit dut (
-    .a(a),
-    .b(b),
-    .cin(cin),
-    .sum(sum),
-    .cout(cout)
+      .a(a),
+      .b(b),
+      .cin(cin),
+      .sum(sum),
+      .cout(cout)
   );
 
   // Test stimulus
@@ -21,51 +21,43 @@ module generate_example_tb;
 
     // Test 1: 基本的な加算
     $display("\nTest 1: Basic addition");
-    a = 8'd15;
-    b = 8'd27;
+    a   = 8'd15;
+    b   = 8'd27;
     cin = 0;
     #1;
     if ({cout, sum} == (a + b + cin))
       $display("  PASS: %0d + %0d + %0d = %0d (cout=%b)", a, b, cin, sum, cout);
-    else
-      $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d",
-               a, b, cin, sum, a + b + cin);
+    else $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d", a, b, cin, sum, a + b + cin);
 
     // Test 2: キャリー入力あり
     $display("\nTest 2: With carry-in");
-    a = 8'd100;
-    b = 8'd50;
+    a   = 8'd100;
+    b   = 8'd50;
     cin = 1;
     #1;
     if ({cout, sum} == (a + b + cin))
       $display("  PASS: %0d + %0d + %0d = %0d (cout=%b)", a, b, cin, sum, cout);
-    else
-      $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d",
-               a, b, cin, sum, a + b + cin);
+    else $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d", a, b, cin, sum, a + b + cin);
 
     // Test 3: オーバーフロー
     $display("\nTest 3: Overflow");
-    a = 8'd200;
-    b = 8'd100;
+    a   = 8'd200;
+    b   = 8'd100;
     cin = 0;
     #1;
     if ({cout, sum} == (a + b + cin))
-      $display("  PASS: %0d + %0d + %0d = %0d (cout=%b, overflow)",
-               a, b, cin, sum, cout);
-    else
-      $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d",
-               a, b, cin, sum, a + b + cin);
+      $display("  PASS: %0d + %0d + %0d = %0d (cout=%b, overflow)", a, b, cin, sum, cout);
+    else $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d", a, b, cin, sum, a + b + cin);
 
     // Test 4: ランダムテスト
     $display("\nTest 4: Random tests");
     for (int i = 0; i < 20; i++) begin
-      a = $urandom_range(0, 255);
-      b = $urandom_range(0, 255);
+      a   = $urandom_range(0, 255);
+      b   = $urandom_range(0, 255);
       cin = $urandom_range(0, 1);
       #1;
       if ({cout, sum} != (a + b + cin)) begin
-        $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d",
-                 a, b, cin, sum, a + b + cin);
+        $display("  FAIL: %0d + %0d + %0d = %0d, expected %0d", a, b, cin, sum, a + b + cin);
       end
     end
     $display("  PASS: 20 random tests completed");

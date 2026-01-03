@@ -130,9 +130,8 @@ module pulse_generator_mealy (
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) count <= 0;
-    else
-      if (state_c == PULSE) count <= count + 1;
-      else count <= 0;
+    else if (state_c == PULSE) count <= count + 1;
+    else count <= 0;
   end
 
   always_comb begin
@@ -178,8 +177,8 @@ module sequence_detector_mealy (
 );
   typedef enum logic [2:0] {
     IDLE = 3'b000,
-    S1 = 3'b001,
-    S10 = 3'b010,
+    S1   = 3'b001,
+    S10  = 3'b010,
     S101 = 3'b101
   } pattern_t;
   pattern_t state_c;
@@ -199,7 +198,7 @@ module sequence_detector_mealy (
         if (data_in) state_n = S101;
         else state_n = IDLE;
       end
-      S101:  begin
+      S101: begin
         if (data_in) state_n = S1;
         else state_n = S10;
       end
@@ -209,7 +208,7 @@ module sequence_detector_mealy (
 
   assign detected = (state_c == S101) & data_in;
 
-  endmodule : sequence_detector_mealy
+endmodule : sequence_detector_mealy
 
 
 // ============================================================================
@@ -254,7 +253,7 @@ module handshake_controller (
   always_comb begin
     ack = 1'b0;
     case (state_c)
-      ACTIVE: if (ready) ack = 1'b1;
+      ACTIVE:  if (ready) ack = 1'b1;
       default: ack = 1'b0;
     endcase
   end

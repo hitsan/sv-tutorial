@@ -4,13 +4,13 @@
 `timescale 1ns / 100ps
 
 module multiplier #(
-  parameter int INPUT_WIDTH = 8,
-  parameter bit IS_SIGNED = 1'b0,
-  localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
+    parameter int INPUT_WIDTH = 8,
+    parameter bit IS_SIGNED = 1'b0,
+    localparam int OUTPUT_WIDTH = INPUT_WIDTH * 2
 ) (
-  input logic [INPUT_WIDTH-1:0] in0,
-  input logic [INPUT_WIDTH-1:0] in1,
-  output logic signed [OUTPUT_WIDTH-1:0] product
+    input logic [INPUT_WIDTH-1:0] in0,
+    input logic [INPUT_WIDTH-1:0] in1,
+    output logic signed [OUTPUT_WIDTH-1:0] product
 );
 
   generate

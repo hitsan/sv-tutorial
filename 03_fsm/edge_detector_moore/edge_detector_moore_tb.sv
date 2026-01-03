@@ -8,10 +8,10 @@ module edge_detector_moore_tb;
 
   // DUT instantiation
   edge_detector_moore dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .data_in(data_in),
-    .edge_detected(edge_detected)
+      .clk(clk),
+      .rst_n(rst_n),
+      .data_in(data_in),
+      .edge_detected(edge_detected)
   );
 
   // Clock generation (10ns period)
@@ -25,7 +25,7 @@ module edge_detector_moore_tb;
     $display("=== edge_detector_moore Test Start ===");
 
     // Reset
-    rst_n = 0;
+    rst_n   = 0;
     data_in = 0;
     #20;
     rst_n = 1;
@@ -37,7 +37,7 @@ module edge_detector_moore_tb;
     #10;
     data_in = 1;
     #10;  // 次のクロックエッジ
-    #1;   // クロック後の安定待ち
+    #1;  // クロック後の安定待ち
     if (edge_detected) $display("PASS: Edge detected (1 cycle after input)");
     else $display("FAIL: Edge not detected");
 

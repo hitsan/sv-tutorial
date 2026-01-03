@@ -12,14 +12,14 @@ module multiplier_pipelined_tb;
   // 信号
   logic                    clk;
   logic                    rst_n;
-  logic [INPUT_WIDTH-1:0]  in0;
-  logic [INPUT_WIDTH-1:0]  in1;
+  logic [ INPUT_WIDTH-1:0] in0;
+  logic [ INPUT_WIDTH-1:0] in1;
   logic [OUTPUT_WIDTH-1:0] product;
 
   // DUT
   multiplier_pipelined #(
       .INPUT_WIDTH(INPUT_WIDTH),
-      .IS_SIGNED(1'b0)
+      .IS_SIGNED  (1'b0)
   ) dut (
       .clk(clk),
       .rst_n(rst_n),
@@ -44,8 +44,8 @@ module multiplier_pipelined_tb;
 
     // 初期化
     rst_n = 0;
-    in0 = 0;
-    in1 = 0;
+    in0   = 0;
+    in1   = 0;
 
     // リセット解除
     #(CLK_PERIOD * 2);
@@ -120,8 +120,8 @@ module multiplier_pipelined_tb;
     // テスト6: ランダムテスト
     $display("\n[Test] Random test cases");
     for (int i = 0; i < 10; i++) begin
-      automatic logic [INPUT_WIDTH-1:0] a = INPUT_WIDTH'($urandom);
-      automatic logic [INPUT_WIDTH-1:0] b = INPUT_WIDTH'($urandom);
+      automatic logic [ INPUT_WIDTH-1:0] a = INPUT_WIDTH'($urandom);
+      automatic logic [ INPUT_WIDTH-1:0] b = INPUT_WIDTH'($urandom);
       automatic logic [OUTPUT_WIDTH-1:0] expected = a * b;
 
       in0 = a;
@@ -129,12 +129,11 @@ module multiplier_pipelined_tb;
       #(CLK_PERIOD * 2);
 
       if (product != expected) begin
-        $error("[%0t] Random test %0d failed: %0d * %0d = %0d (expected %0d)",
-               $time, i, a, b, product, expected);
+        $error("[%0t] Random test %0d failed: %0d * %0d = %0d (expected %0d)", $time, i, a, b,
+               product, expected);
         errors++;
       end else begin
-        $display("[%0t] Random test %0d passed: %0d * %0d = %0d",
-                 $time, i, a, b, product);
+        $display("[%0t] Random test %0d passed: %0d * %0d = %0d", $time, i, a, b, product);
       end
       #(CLK_PERIOD);
     end

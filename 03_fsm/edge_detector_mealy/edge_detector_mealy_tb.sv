@@ -8,10 +8,10 @@ module edge_detector_mealy_tb;
 
   // DUT instantiation
   edge_detector_mealy dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .data_in(data_in),
-    .edge_detected(edge_detected)
+      .clk(clk),
+      .rst_n(rst_n),
+      .data_in(data_in),
+      .edge_detected(edge_detected)
   );
 
   // Clock generation (10ns period)
@@ -25,9 +25,9 @@ module edge_detector_mealy_tb;
     $display("=== edge_detector_mealy Test Start ===");
 
     // Reset
-    rst_n = 0;
+    rst_n   = 0;
     data_in = 0;
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     rst_n = 1;
 
     // Test 1: 0→1 エッジ検出
@@ -38,7 +38,8 @@ module edge_detector_mealy_tb;
     if (edge_detected) $display("PASS: Edge detected");
     else begin
       $display("FAIL: Edge not detected");
-      $display("  state=%b, data_in=%b, edge_detected=%b", dut.current_state, data_in, edge_detected);
+      $display("  state=%b, data_in=%b, edge_detected=%b", dut.current_state, data_in,
+               edge_detected);
     end
     @(posedge clk);  // クロックエッジで状態更新
 
@@ -78,7 +79,7 @@ module edge_detector_mealy_tb;
     else $display("FAIL: Third edge not detected");
     @(posedge clk);
 
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     $display("\n=== edge_detector_mealy Test Complete ===");
     $finish;
   end

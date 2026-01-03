@@ -8,10 +8,10 @@ module sequence_detector_mealy_tb;
 
   // DUT instantiation
   sequence_detector_mealy dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .data_in(data_in),
-    .detected(detected)
+      .clk(clk),
+      .rst_n(rst_n),
+      .data_in(data_in),
+      .detected(detected)
   );
 
   // Clock generation (10ns period)
@@ -31,7 +31,7 @@ module sequence_detector_mealy_tb;
     $display("=== sequence_detector_mealy Test Start ===");
 
     // Reset
-    rst_n = 0;
+    rst_n   = 0;
     data_in = 0;
     #20;
     rst_n = 1;
@@ -73,7 +73,7 @@ module sequence_detector_mealy_tb;
     // Test 3: 不一致パターン "1010"
     $display("\nTest 3: Non-matching sequence '1010'");
     data_in = 0;
-    repeat(3) @(posedge clk);
+    repeat (3) @(posedge clk);
     send_bit(1);  // 1
     send_bit(0);  // 10
     send_bit(1);  // 101
@@ -86,7 +86,7 @@ module sequence_detector_mealy_tb;
     // Test 4: 連続した1 "1111011"
     $display("\nTest 4: Multiple 1's then '1011'");
     data_in = 0;
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     send_bit(1);  // 1
     send_bit(1);  // 11
     send_bit(1);  // 111

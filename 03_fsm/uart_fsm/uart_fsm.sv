@@ -33,7 +33,7 @@ module uart_tx (
     output logic       tx_busy,
     output logic       tx_done
 );
-    // ここに実装
+  // ここに実装
 endmodule : uart_tx
 
 
@@ -59,7 +59,7 @@ module uart_rx (
     output logic       rx_valid,
     output logic       rx_error
 );
-    // ここに実装
+  // ここに実装
 endmodule : uart_rx
 
 
@@ -86,5 +86,5 @@ module uart (
     output logic       rx_valid,
     output logic       rx_error
 );
-    // ここに実装
+  // ここに実装
 endmodule : uart

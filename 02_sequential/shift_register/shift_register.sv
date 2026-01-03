@@ -22,10 +22,10 @@ module shift_reg_right #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       parallel_out <= '0;
-      serial_out <= '0;
+      serial_out   <= '0;
     end else begin
       parallel_out <= {serial_in, parallel_out[WIDTH-1:1]};
-      serial_out <= parallel_out[0];
+      serial_out   <= parallel_out[0];
     end
   end
 endmodule : shift_reg_right
@@ -49,12 +49,11 @@ module shift_reg_left #(
 );
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      serial_out <= '0;
+      serial_out   <= '0;
       parallel_out <= '0;
-    end
-    else begin
+    end else begin
       parallel_out <= {parallel_out[WIDTH-2:0], serial_in};
-      serial_out <= parallel_out[WIDTH-1];
+      serial_out   <= parallel_out[WIDTH-1];
     end
   end
 
@@ -100,7 +99,7 @@ module shift_reg_bidirectional #(
 ) (
     input  logic             clk,
     input  logic             rst_n,
-    input  logic             dir,            // 1=right, 0=left
+    input  logic             dir,               // 1=right, 0=left
     input  logic             serial_in_right,
     input  logic             serial_in_left,
     output logic             serial_out_right,
@@ -108,7 +107,7 @@ module shift_reg_bidirectional #(
     output logic [WIDTH-1:0] parallel_out
 );
   assign serial_out_right = parallel_out[0];
-  assign serial_out_left = parallel_out[WIDTH-1];
+  assign serial_out_left  = parallel_out[WIDTH-1];
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) parallel_out <= '0;
@@ -132,7 +131,7 @@ module shift_reg_universal #(
 ) (
     input  logic             clk,
     input  logic             rst_n,
-    input  logic [1:0]       mode,
+    input  logic [      1:0] mode,
     input  logic             serial_in_right,
     input  logic             serial_in_left,
     input  logic [WIDTH-1:0] parallel_in,
@@ -141,7 +140,7 @@ module shift_reg_universal #(
     output logic [WIDTH-1:0] parallel_out
 );
   assign serial_out_right = parallel_out[0];
-  assign serial_out_left = parallel_out[WIDTH-1];
+  assign serial_out_left  = parallel_out[WIDTH-1];
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) parallel_out <= '0;
     else begin

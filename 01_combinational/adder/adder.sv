@@ -11,9 +11,9 @@ module adder_simple #(
     input  logic [WIDTH-1:0] b,
     output logic [WIDTH-1:0] sum
 );
-    // 最もシンプルな加算
-    // キャリーアウトは無視される（切り捨て）
-    assign sum = a + b;
+  // 最もシンプルな加算
+  // キャリーアウトは無視される（切り捨て）
+  assign sum = a + b;
 
 endmodule : adder_simple
 
@@ -29,12 +29,12 @@ module adder_cout #(
     output logic [WIDTH-1:0] sum,
     output logic             cout  // キャリーアウト
 );
-    // 方法1: 中間変数を使用
-    logic [WIDTH:0] temp_sum;  // WIDTH+1ビット必要
+  // 方法1: 中間変数を使用
+  logic [WIDTH:0] temp_sum;  // WIDTH+1ビット必要
 
-    assign temp_sum = a + b;   // WIDTH+1ビットの加算結果
-    assign sum = temp_sum[WIDTH-1:0];  // 下位WIDTHビット
-    assign cout = temp_sum[WIDTH];      // 最上位ビット（キャリー）
+  assign temp_sum = a + b;  // WIDTH+1ビットの加算結果
+  assign sum      = temp_sum[WIDTH-1:0];  // 下位WIDTHビット
+  assign cout     = temp_sum[WIDTH];  // 最上位ビット（キャリー）
 
 endmodule : adder_cout
 
@@ -50,11 +50,11 @@ module adder_cout_concat #(
     output logic [WIDTH-1:0] sum,
     output logic             cout
 );
-    // 方法2: 連結演算子を使用
-    // {cout, sum} は (WIDTH+1)ビットのベクタを形成
-    assign {cout, sum} = a + b;
+  // 方法2: 連結演算子を使用
+  // {cout, sum} は (WIDTH+1)ビットのベクタを形成
+  assign {cout, sum} = a + b;
 
-    // 注意: 右辺は自動的に(WIDTH+1)ビットに拡張される
+  // 注意: 右辺は自動的に(WIDTH+1)ビットに拡張される
 
 endmodule : adder_cout_concat
 
@@ -67,15 +67,15 @@ module adder_cin_cout #(
 ) (
     input  logic [WIDTH-1:0] a,
     input  logic [WIDTH-1:0] b,
-    input  logic             cin,   // キャリーイン
+    input  logic             cin,  // キャリーイン
     output logic [WIDTH-1:0] sum,
-    output logic             cout   // キャリーアウト
+    output logic             cout  // キャリーアウト
 );
-    // キャリーインを含めた加算
-    assign {cout, sum} = a + b + cin;
+  // キャリーインを含めた加算
+  assign {cout, sum} = a + b + cin;
 
-    // 複数ワードの加算に使用可能
-    // 例: 16ビット = 8ビット加算器 × 2段
+  // 複数ワードの加算に使用可能
+  // 例: 16ビット = 8ビット加算器 × 2段
 
 endmodule : adder_cin_cout
 
@@ -91,17 +91,16 @@ module adder_overflow_signed #(
     output logic signed [WIDTH-1:0] sum,
     output logic                    overflow  // オーバーフロー検出
 );
-    // 符号付き加算
-    assign sum = a + b;
+  // 符号付き加算
+  assign sum = a + b;
 
-    // オーバーフロー検出ロジック（符号付き）
-    // 正 + 正 = 負 または 負 + 負 = 正 の場合にオーバーフロー
-    assign overflow = (a[WIDTH-1] == b[WIDTH-1]) &&
-                      (sum[WIDTH-1] != a[WIDTH-1]);
+  // オーバーフロー検出ロジック（符号付き）
+  // 正 + 正 = 負 または 負 + 負 = 正 の場合にオーバーフロー
+  assign overflow = (a[WIDTH-1] == b[WIDTH-1]) && (sum[WIDTH-1] != a[WIDTH-1]);
 
-    // 詳細な説明:
-    // - 同符号同士の加算のみオーバーフロー可能性あり
-    // - 結果の符号が入力と異なればオーバーフロー
+  // 詳細な説明:
+  // - 同符号同士の加算のみオーバーフロー可能性あり
+  // - 結果の符号が入力と異なればオーバーフロー
 
 endmodule : adder_overflow_signed
 
@@ -117,12 +116,12 @@ module adder_overflow_unsigned #(
     output logic [WIDTH-1:0] sum,
     output logic             overflow  // オーバーフロー（符号なし）
 );
-    logic cout;
+  logic cout;
 
-    assign {cout, sum} = a + b;
+  assign {cout, sum} = a + b;
 
-    // 符号なしのオーバーフローはキャリーアウトと同じ
-    assign overflow = cout;
+  // 符号なしのオーバーフローはキャリーアウトと同じ
+  assign overflow = cout;
 
 endmodule : adder_overflow_unsigned
 
@@ -131,8 +130,8 @@ endmodule : adder_overflow_unsigned
 // 全機能搭載加算器
 // ============================================================================
 module adder_full #(
-    parameter int WIDTH = 8,
-    parameter bit SIGNED = 0  // 0=符号なし, 1=符号付き
+    parameter int WIDTH  = 8,
+    parameter bit SIGNED = 0   // 0=符号なし, 1=符号付き
 ) (
     input  logic [WIDTH-1:0] a,
     input  logic [WIDTH-1:0] b,
@@ -141,20 +140,19 @@ module adder_full #(
     output logic             cout,
     output logic             overflow
 );
-    // 加算実行
-    assign {cout, sum} = a + b + cin;
+  // 加算実行
+  assign {cout, sum} = a + b + cin;
 
-    // オーバーフロー検出（signed/unsigned切り替え）
-    generate
-        if (SIGNED) begin : signed_overflow
-            // 符号付きオーバーフロー検出
-            assign overflow = (a[WIDTH-1] == b[WIDTH-1]) &&
-                              (sum[WIDTH-1] != a[WIDTH-1]);
-        end else begin : unsigned_overflow
-            // 符号なしオーバーフロー検出（キャリーアウト）
-            assign overflow = cout;
-        end
-    endgenerate
+  // オーバーフロー検出（signed/unsigned切り替え）
+  generate
+    if (SIGNED) begin : signed_overflow
+      // 符号付きオーバーフロー検出
+      assign overflow = (a[WIDTH-1] == b[WIDTH-1]) && (sum[WIDTH-1] != a[WIDTH-1]);
+    end else begin : unsigned_overflow
+      // 符号なしオーバーフロー検出（キャリーアウト）
+      assign overflow = cout;
+    end
+  endgenerate
 
 endmodule : adder_full
 
@@ -168,25 +166,29 @@ module adder_16bit (
     output logic [15:0] sum,
     output logic        cout
 );
-    logic carry_mid;  // 中間キャリー
+  logic carry_mid;  // 中間キャリー
 
-    // 下位8ビット加算
-    adder_cin_cout #(.WIDTH(8)) adder_low (
-        .a(a[7:0]),
-        .b(b[7:0]),
-        .cin(1'b0),           // 最下位のキャリーインは0
-        .sum(sum[7:0]),
-        .cout(carry_mid)      // 中間キャリー
-    );
+  // 下位8ビット加算
+  adder_cin_cout #(
+      .WIDTH(8)
+  ) adder_low (
+      .a   (a[7:0]),
+      .b   (b[7:0]),
+      .cin (1'b0),      // 最下位のキャリーインは0
+      .sum (sum[7:0]),
+      .cout(carry_mid)  // 中間キャリー
+  );
 
-    // 上位8ビット加算
-    adder_cin_cout #(.WIDTH(8)) adder_high (
-        .a(a[15:8]),
-        .b(b[15:8]),
-        .cin(carry_mid),      // 下位からのキャリー
-        .sum(sum[15:8]),
-        .cout(cout)           // 最終キャリーアウト
-    );
+  // 上位8ビット加算
+  adder_cin_cout #(
+      .WIDTH(8)
+  ) adder_high (
+      .a   (a[15:8]),
+      .b   (b[15:8]),
+      .cin (carry_mid),  // 下位からのキャリー
+      .sum (sum[15:8]),
+      .cout(cout)        // 最終キャリーアウト
+  );
 
 endmodule : adder_16bit
 
@@ -199,16 +201,16 @@ module subtractor #(
 ) (
     input  logic [WIDTH-1:0] a,
     input  logic [WIDTH-1:0] b,
-    output logic [WIDTH-1:0] diff,  // 差分
-    output logic             borrow // ボロー（借り）
+    output logic [WIDTH-1:0] diff,   // 差分
+    output logic             borrow  // ボロー（借り）
 );
-    // 減算は a - b = a + (~b) + 1（2の補数）
-    logic cout;
+  // 減算は a - b = a + (~b) + 1（2の補数）
+  logic cout;
 
-    assign {cout, diff} = a + (~b) + 1'b1;
+  assign {cout, diff} = a + (~b) + 1'b1;
 
-    // ボローはキャリーアウトの反転
-    assign borrow = ~cout;
+  // ボローはキャリーアウトの反転
+  assign borrow = ~cout;
 
 endmodule : subtractor
 
@@ -221,20 +223,20 @@ module adder_subtractor #(
 ) (
     input  logic [WIDTH-1:0] a,
     input  logic [WIDTH-1:0] b,
-    input  logic             mode,  // 0=加算, 1=減算
+    input  logic             mode,    // 0=加算, 1=減算
     output logic [WIDTH-1:0] result,
     output logic             cout
 );
-    // mode=0: a + b
-    // mode=1: a - b = a + (~b) + 1
+  // mode=0: a + b
+  // mode=1: a - b = a + (~b) + 1
 
-    logic [WIDTH-1:0] b_modified;
+  logic [WIDTH-1:0] b_modified;
 
-    // modeに応じてbを反転
-    assign b_modified = mode ? ~b : b;
+  // modeに応じてbを反転
+  assign b_modified = mode ? ~b : b;
 
-    // 加算実行（減算時はcinに1を入れて2の補数を完成）
-    assign {cout, result} = a + b_modified + mode;
+  // 加算実行（減算時はcinに1を入れて2の補数を完成）
+  assign {cout, result} = a + b_modified + mode;
 
 endmodule : adder_subtractor
 

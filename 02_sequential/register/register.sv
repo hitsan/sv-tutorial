@@ -12,19 +12,19 @@ module dff_async_reset #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // always_ff: 順序回路専用のブロック
-    // - ノンブロッキング代入 (<=) を使用
-    // - 感度リストにクロックエッジとリセットを指定
+  // always_ff: 順序回路専用のブロック
+  // - ノンブロッキング代入 (<=) を使用
+  // - 感度リストにクロックエッジとリセットを指定
 
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            q <= '0;  // リセット時は0にクリア
-        end else begin
-            q <= d;   // 通常動作: クロックエッジでdを取り込む
-        end
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      q <= '0;  // リセット時は0にクリア
+    end else begin
+      q <= d;  // 通常動作: クロックエッジでdを取り込む
     end
+  end
 
-    // 注意: '0 はすべてのビットを0にする（幅に依存しない）
+  // 注意: '0 はすべてのビットを0にする（幅に依存しない）
 
 endmodule : dff_async_reset
 
@@ -36,22 +36,22 @@ module dff_sync_reset #(
     parameter int WIDTH = 8
 ) (
     input  logic             clk,
-    input  logic             rst,   // 同期リセット
+    input  logic             rst,  // 同期リセット
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // 感度リストにはクロックのみ（rstはクロック同期信号）
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            q <= '0;
-        end else begin
-            q <= d;
-        end
+  // 感度リストにはクロックのみ（rstはクロック同期信号）
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      q <= '0;
+    end else begin
+      q <= d;
     end
+  end
 
-    // 同期リセット vs 非同期リセット:
-    // - 非同期: rstの変化で即座にリセット
-    // - 同期: クロックエッジでのみrstを評価
+  // 同期リセット vs 非同期リセット:
+  // - 非同期: rstの変化で即座にリセット
+  // - 同期: クロックエッジでのみrstを評価
 
 endmodule : dff_sync_reset
 
@@ -68,16 +68,16 @@ module dff_enable #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            q <= '0;
-        end else if (en) begin
-            q <= d;  // イネーブル時のみ更新
-        end
-        // en=0のとき: qは前の値を保持（暗黙的）
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      q <= '0;
+    end else if (en) begin
+      q <= d;  // イネーブル時のみ更新
     end
+    // en=0のとき: qは前の値を保持（暗黙的）
+  end
 
-    // 用途: データをサンプリングするタイミングを制御
+  // 用途: データをサンプリングするタイミングを制御
 
 endmodule : dff_enable
 
@@ -94,13 +94,13 @@ module dff_reset_value #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            q <= RESET_VALUE;  // パラメータで指定された値
-        end else begin
-            q <= d;
-        end
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      q <= RESET_VALUE;  // パラメータで指定された値
+    end else begin
+      q <= d;
     end
+  end
 
 endmodule : dff_reset_value
 
@@ -116,16 +116,16 @@ module dff_init_value #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q = INIT_VALUE  // 初期値
 );
-    // FPGAではレジスタの初期値を設定可能
-    // ASICでは通常、初期値は使用できない
+  // FPGAではレジスタの初期値を設定可能
+  // ASICでは通常、初期値は使用できない
 
-    always_ff @(posedge clk) begin
-        q <= d;
-    end
+  always_ff @(posedge clk) begin
+    q <= d;
+  end
 
-    // 注意: 初期値とリセット値は異なる
-    // - 初期値: 電源投入時の値（FPGAのみ）
-    // - リセット値: リセット信号による値（すべてのデバイス）
+  // 注意: 初期値とリセット値は異なる
+  // - 初期値: 電源投入時の値（FPGAのみ）
+  // - リセット値: リセット信号による値（すべてのデバイス）
 
 endmodule : dff_init_value
 
@@ -145,35 +145,29 @@ module register_generic #(
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // generateを使ってリセットタイプを切り替え
-    generate
-        if (ASYNC_RESET) begin : async_reset_gen
-            // 非同期リセット
-            if (RESET_ACTIVE_HIGH) begin : active_high
-                always_ff @(posedge clk or posedge rst) begin
-                    if (rst)
-                        q <= RESET_VALUE;
-                    else if (en)
-                        q <= d;
-                end
-            end else begin : active_low
-                always_ff @(posedge clk or negedge rst) begin
-                    if (!rst)
-                        q <= RESET_VALUE;
-                    else if (en)
-                        q <= d;
-                end
-            end
-        end else begin : sync_reset_gen
-            // 同期リセット
-            always_ff @(posedge clk) begin
-                if (RESET_ACTIVE_HIGH ? rst : !rst)
-                    q <= RESET_VALUE;
-                else if (en)
-                    q <= d;
-            end
+  // generateを使ってリセットタイプを切り替え
+  generate
+    if (ASYNC_RESET) begin : async_reset_gen
+      // 非同期リセット
+      if (RESET_ACTIVE_HIGH) begin : active_high
+        always_ff @(posedge clk or posedge rst) begin
+          if (rst) q <= RESET_VALUE;
+          else if (en) q <= d;
         end
-    endgenerate
+      end else begin : active_low
+        always_ff @(posedge clk or negedge rst) begin
+          if (!rst) q <= RESET_VALUE;
+          else if (en) q <= d;
+        end
+      end
+    end else begin : sync_reset_gen
+      // 同期リセット
+      always_ff @(posedge clk) begin
+        if (RESET_ACTIVE_HIGH ? rst : !rst) q <= RESET_VALUE;
+        else if (en) q <= d;
+      end
+    end
+  endgenerate
 
 endmodule : register_generic
 
@@ -185,36 +179,36 @@ module register_array #(
     parameter int WIDTH = 32,
     parameter int DEPTH = 8
 ) (
-    input  logic                    clk,
-    input  logic                    rst_n,
+    input  logic                     clk,
+    input  logic                     rst_n,
     input  logic [$clog2(DEPTH)-1:0] wr_addr,  // 書き込みアドレス
-    input  logic                    wr_en,     // 書き込みイネーブル
-    input  logic [WIDTH-1:0]        wr_data,   // 書き込みデータ
+    input  logic                     wr_en,    // 書き込みイネーブル
+    input  logic [        WIDTH-1:0] wr_data,  // 書き込みデータ
     input  logic [$clog2(DEPTH)-1:0] rd_addr,  // 読み出しアドレス
-    output logic [WIDTH-1:0]        rd_data    // 読み出しデータ
+    output logic [        WIDTH-1:0] rd_data   // 読み出しデータ
 );
-    // レジスタ配列の宣言
-    logic [WIDTH-1:0] registers [DEPTH];
+  // レジスタ配列の宣言
+  logic [WIDTH-1:0] registers[DEPTH];
 
-    // 書き込み処理（同期）
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            // リセット時にすべてのレジスタをクリア
-            for (int i = 0; i < DEPTH; i++) begin
-                registers[i] <= '0;
-            end
-        end else if (wr_en) begin
-            registers[wr_addr] <= wr_data;
-        end
+  // 書き込み処理（同期）
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      // リセット時にすべてのレジスタをクリア
+      for (int i = 0; i < DEPTH; i++) begin
+        registers[i] <= '0;
+      end
+    end else if (wr_en) begin
+      registers[wr_addr] <= wr_data;
     end
+  end
 
-    // 読み出し処理（組み合わせ回路）
-    assign rd_data = registers[rd_addr];
+  // 読み出し処理（組み合わせ回路）
+  assign rd_data = registers[rd_addr];
 
-    // または同期読み出し:
-    // always_ff @(posedge clk) begin
-    //     rd_data <= registers[rd_addr];
-    // end
+  // または同期読み出し:
+  // always_ff @(posedge clk) begin
+  //     rd_data <= registers[rd_addr];
+  // end
 
 endmodule : register_array
 
@@ -223,36 +217,36 @@ endmodule : register_array
 // パイプラインレジスタ（複数段）
 // ============================================================================
 module pipeline_register #(
-    parameter int WIDTH = 8,
-    parameter int STAGES = 3  // パイプライン段数
+    parameter int WIDTH  = 8,
+    parameter int STAGES = 3   // パイプライン段数
 ) (
     input  logic             clk,
     input  logic             rst_n,
     input  logic [WIDTH-1:0] d,
     output logic [WIDTH-1:0] q
 );
-    // パイプラインレジスタ配列
-    logic [WIDTH-1:0] pipe [STAGES];
+  // パイプラインレジスタ配列
+  logic [WIDTH-1:0] pipe[STAGES];
 
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            for (int i = 0; i < STAGES; i++) begin
-                pipe[i] <= '0;
-            end
-        end else begin
-            // 最初の段
-            pipe[0] <= d;
-            // 後続の段
-            for (int i = 1; i < STAGES; i++) begin
-                pipe[i] <= pipe[i-1];
-            end
-        end
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      for (int i = 0; i < STAGES; i++) begin
+        pipe[i] <= '0;
+      end
+    end else begin
+      // 最初の段
+      pipe[0] <= d;
+      // 後続の段
+      for (int i = 1; i < STAGES; i++) begin
+        pipe[i] <= pipe[i-1];
+      end
     end
+  end
 
-    // 最終段の出力
-    assign q = pipe[STAGES-1];
+  // 最終段の出力
+  assign q = pipe[STAGES-1];
 
-    // 遅延: STAGES クロックサイクル
+  // 遅延: STAGES クロックサイクル
 
 endmodule : pipeline_register
 

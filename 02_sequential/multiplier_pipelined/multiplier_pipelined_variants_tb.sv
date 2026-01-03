@@ -24,16 +24,16 @@ module multiplier_pipelined_variants_tb;
   // 共通信号
   logic                    clk;
   logic                    rst_n;
-  logic [INPUT_WIDTH-1:0]  in0;
-  logic [INPUT_WIDTH-1:0]  in1;
+  logic [ INPUT_WIDTH-1:0] in0;
+  logic [ INPUT_WIDTH-1:0] in1;
 
   // 各DUTの出力信号を定義
   logic [OUTPUT_WIDTH-1:0] product_multistage;
   logic [OUTPUT_WIDTH-1:0] product_array;
 
   // エラーカウント変数を定義
-  int errors_multistage = 0;
-  int errors_array = 0;
+  int                      errors_multistage = 0;
+  int                      errors_array = 0;
 
   // 2つのDUTをインスタンス化
   multiplier_pipelined_multistage #(
@@ -70,8 +70,8 @@ module multiplier_pipelined_variants_tb;
 
     // 初期化
     rst_n = 0;
-    in0 = 0;
-    in1 = 0;
+    in0   = 0;
+    in1   = 0;
 
     // リセット解除
     #(CLK_PERIOD * 2);
@@ -132,11 +132,8 @@ module multiplier_pipelined_variants_tb;
   end
 
   // test_case タスク
-  task test_case(
-      input logic [INPUT_WIDTH-1:0] a,
-      input logic [INPUT_WIDTH-1:0] b,
-      input string description
-  );
+  task test_case(input logic [INPUT_WIDTH-1:0] a, input logic [INPUT_WIDTH-1:0] b,
+                 input string description);
     logic [OUTPUT_WIDTH-1:0] expected;
 
     // 期待値を計算
@@ -151,28 +148,26 @@ module multiplier_pipelined_variants_tb;
 
     // Multi-Stage の検証
     if (product_multistage !== expected) begin
-      $error("[%0t] Multi-Stage FAILED: %s = %0d (expected %0d)",
-             $time, description, product_multistage, expected);
+      $error("[%0t] Multi-Stage FAILED: %s = %0d (expected %0d)", $time, description,
+             product_multistage, expected);
       errors_multistage++;
     end else begin
-      $display("[%0t] Multi-Stage PASSED: %s = %0d",
-               $time, description, product_multistage);
+      $display("[%0t] Multi-Stage PASSED: %s = %0d", $time, description, product_multistage);
     end
 
     // Array の検証
     if (product_array !== expected) begin
-      $error("[%0t] Array FAILED: %s = %0d (expected %0d)",
-             $time, description, product_array, expected);
+      $error("[%0t] Array FAILED: %s = %0d (expected %0d)", $time, description, product_array,
+             expected);
       errors_array++;
     end else begin
-      $display("[%0t] Array PASSED: %s = %0d",
-               $time, description, product_array);
+      $display("[%0t] Array PASSED: %s = %0d", $time, description, product_array);
     end
 
     // クロスチェック: 両方の実装が一致するか
     if (product_multistage !== product_array) begin
-      $error("[%0t] CROSS-CHECK FAILED: %s - Multi-Stage=%0d, Array=%0d",
-             $time, description, product_multistage, product_array);
+      $error("[%0t] CROSS-CHECK FAILED: %s - Multi-Stage=%0d, Array=%0d", $time, description,
+             product_multistage, product_array);
     end
 
     // 次のテストのために1サイクル待機

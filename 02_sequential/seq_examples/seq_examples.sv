@@ -99,8 +99,7 @@ module exercise4_counter #(
     if (!rst_n) count <= '0;
     else if (count == '1) begin
       count <= '0;
-    end
-    else count <= count + 1;
+    end else count <= count + 1;
   end
 
 endmodule : exercise4_counter

@@ -8,10 +8,10 @@ module pulse_generator_mealy_tb;
 
   // DUT instantiation
   pulse_generator_mealy dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .start(start),
-    .pulse(pulse)
+      .clk  (clk),
+      .rst_n(rst_n),
+      .start(start),
+      .pulse(pulse)
   );
 
   // Clock generation (10ns period)

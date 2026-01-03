@@ -7,9 +7,9 @@ module module_inst_tb;
 
   // DUT instantiation
   mux4x1_structural dut (
-    .in(in),
-    .sel(sel),
-    .out(out)
+      .in (in),
+      .sel(sel),
+      .out(out)
   );
 
   // Test stimulus
@@ -19,7 +19,7 @@ module module_inst_tb;
     // Test all combinations
     for (int s = 0; s < 4; s++) begin
       for (int i = 0; i < 16; i++) begin
-        in = i;
+        in  = i;
         sel = s;
         #1;
 
@@ -27,8 +27,7 @@ module module_inst_tb;
         if (out == in[sel]) begin
           if (i == 0) $display("  sel=%0d: PASS", sel);
         end else begin
-          $display("  FAIL: in=4'b%04b, sel=%0d, out=%b, expected=%b",
-                   in, sel, out, in[sel]);
+          $display("  FAIL: in=4'b%04b, sel=%0d, out=%b, expected=%b", in, sel, out, in[sel]);
         end
       end
     end

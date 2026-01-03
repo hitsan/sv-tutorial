@@ -26,7 +26,7 @@ module full_adder (
     output logic sum,
     output logic cout
 );
-    assign {cout, sum} = a + b + cin;
+  assign {cout, sum} = a + b + cin;
 endmodule : full_adder
 
 // 8ビットリップルキャリー加算器
@@ -41,11 +41,11 @@ module ripple_carry_adder_8bit (
   generate
     for (genvar i = 0; i < 8; i++) begin : gen_adder
       full_adder u_adder (
-        .a(a[i]),
-        .b(b[i]),
-        .cin(carry[i]),
-        .sum(sum[i]),
-        .cout(carry[i+1])
+          .a(a[i]),
+          .b(b[i]),
+          .cin(carry[i]),
+          .sum(sum[i]),
+          .cout(carry[i+1])
       );
     end
   endgenerate

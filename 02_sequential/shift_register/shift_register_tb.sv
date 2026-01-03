@@ -18,7 +18,9 @@ module shift_register_tb;
   logic sr_right_serial_in, sr_right_serial_out;
   logic [WIDTH-1:0] sr_right_parallel_out;
 
-  shift_reg_right #(.WIDTH(WIDTH)) dut_right (
+  shift_reg_right #(
+      .WIDTH(WIDTH)
+  ) dut_right (
       .clk(clk),
       .rst_n(rst_n),
       .serial_in(sr_right_serial_in),
@@ -32,7 +34,9 @@ module shift_register_tb;
   logic sr_left_serial_in, sr_left_serial_out;
   logic [WIDTH-1:0] sr_left_parallel_out;
 
-  shift_reg_left #(.WIDTH(WIDTH)) dut_left (
+  shift_reg_left #(
+      .WIDTH(WIDTH)
+  ) dut_left (
       .clk(clk),
       .rst_n(rst_n),
       .serial_in(sr_left_serial_in),
@@ -46,7 +50,9 @@ module shift_register_tb;
   logic piso_load, piso_serial_in, piso_serial_out;
   logic [WIDTH-1:0] piso_parallel_in;
 
-  shift_reg_piso #(.WIDTH(WIDTH)) dut_piso (
+  shift_reg_piso #(
+      .WIDTH(WIDTH)
+  ) dut_piso (
       .clk(clk),
       .rst_n(rst_n),
       .load(piso_load),
@@ -62,7 +68,9 @@ module shift_register_tb;
   logic bidir_serial_out_right, bidir_serial_out_left;
   logic [WIDTH-1:0] bidir_parallel_out;
 
-  shift_reg_bidirectional #(.WIDTH(WIDTH)) dut_bidir (
+  shift_reg_bidirectional #(
+      .WIDTH(WIDTH)
+  ) dut_bidir (
       .clk(clk),
       .rst_n(rst_n),
       .dir(bidir_dir),
@@ -81,7 +89,9 @@ module shift_register_tb;
   logic univ_serial_out_right, univ_serial_out_left;
   logic [WIDTH-1:0] univ_parallel_in, univ_parallel_out;
 
-  shift_reg_universal #(.WIDTH(WIDTH)) dut_univ (
+  shift_reg_universal #(
+      .WIDTH(WIDTH)
+  ) dut_univ (
       .clk(clk),
       .rst_n(rst_n),
       .mode(univ_mode),
@@ -98,7 +108,9 @@ module shift_register_tb;
   // ============================================================================
   logic [WIDTH-1:0] ring_out;
 
-  shift_reg_ring #(.WIDTH(WIDTH)) dut_ring (
+  shift_reg_ring #(
+      .WIDTH(WIDTH)
+  ) dut_ring (
       .clk(clk),
       .rst_n(rst_n),
       .ring_out(ring_out)
@@ -151,10 +163,10 @@ module shift_register_tb;
     #1;
     $display("  After 1 bit input: 0x%h", sr_right_parallel_out);
     sr_right_serial_in = 0;
-    for (int i = 0; i < WIDTH-1; i++) begin
+    for (int i = 0; i < WIDTH - 1; i++) begin
       @(posedge clk);
       #1;
-      $display("  After shift %0d: 0x%h", i+1, sr_right_parallel_out);
+      $display("  After shift %0d: 0x%h", i + 1, sr_right_parallel_out);
     end
     if (sr_right_parallel_out !== 8'h01) begin
       $error("  FAIL: Expected 0x01, got 0x%h", sr_right_parallel_out);
@@ -176,10 +188,10 @@ module shift_register_tb;
     #1;
     $display("  After 1 bit input: 0x%h", sr_left_parallel_out);
     sr_left_serial_in = 0;
-    for (int i = 0; i < WIDTH-1; i++) begin
+    for (int i = 0; i < WIDTH - 1; i++) begin
       @(posedge clk);
       #1;
-      $display("  After shift %0d: 0x%h", i+1, sr_left_parallel_out);
+      $display("  After shift %0d: 0x%h", i + 1, sr_left_parallel_out);
     end
     if (sr_left_parallel_out !== 8'h80) begin
       $error("  FAIL: Expected 0x80, got 0x%h", sr_left_parallel_out);
@@ -222,14 +234,14 @@ module shift_register_tb;
     // 右シフトテスト
     bidir_dir = 1;
     bidir_serial_in_right = 1;
-    repeat(3) @(posedge clk);
+    repeat (3) @(posedge clk);
     #1;
     $display("  After 3 right shifts: 0x%h", bidir_parallel_out);
 
     // 左シフトテスト
     bidir_dir = 0;
     bidir_serial_in_left = 1;
-    repeat(3) @(posedge clk);
+    repeat (3) @(posedge clk);
     #1;
     $display("  After 3 left shifts: 0x%h", bidir_parallel_out);
 
@@ -253,13 +265,13 @@ module shift_register_tb;
 
     // 右シフト
     univ_mode = 2'b01;
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     #1;
     $display("  After 2 right shifts: 0x%h", univ_parallel_out);
 
     // 左シフト
     univ_mode = 2'b10;
-    repeat(2) @(posedge clk);
+    repeat (2) @(posedge clk);
     #1;
     $display("  After 2 left shifts: 0x%h", univ_parallel_out);
 
@@ -272,7 +284,7 @@ module shift_register_tb;
     rst_n = 1;
     #1;
     $display("  Initial: 0x%h", ring_out);
-    repeat(WIDTH + 2) begin
+    repeat (WIDTH + 2) begin
       @(posedge clk);
       #1;
       $display("  Ring: 0x%h", ring_out);
