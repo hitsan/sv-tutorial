@@ -37,11 +37,18 @@ module ripple_carry_adder_8bit (
     output logic [7:0] sum,
     output logic       cout
 );
-    // ここに実装
-    // ヒント:
-    // 1. logic [8:0] carry; でキャリー信号を宣言
-    // 2. carry[0] = cin;
-    // 3. for generate で full_adder を8個インスタンス化
-    // 4. cout = carry[8];
-
+  logic [8:0] carry;
+  generate
+    for (genvar i = 0; i < 8; i++) begin : gen_adder
+      full_adder u_adder (
+        .a(a[i]),
+        .b(b[i]),
+        .cin(carry[i]),
+        .sum(sum[i]),
+        .cout(carry[i+1])
+      );
+    end
+  endgenerate
+  assign cout = carry[8];
+  assign carry[0] = cin;
 endmodule : ripple_carry_adder_8bit
