@@ -1,9 +1,9 @@
-// priority_encoder_4in のテストベンチ
-// 全16パターンを網羅的にテストし、assertionでエラーを検出
+// priority_encoder_4in_if のテストベンチ
+// if-else実装の全16パターンを網羅的にテストし、assertionでエラーを検出
 
 `timescale 1ns / 100ps
 
-module priority_encoder_4in_tb;
+module priority_encoder_4in_if_tb;
 
     // ============================================================================
     // テストベンチの信号宣言
@@ -15,7 +15,7 @@ module priority_encoder_4in_tb;
     // ============================================================================
     // DUT (Device Under Test) のインスタンス化
     // ============================================================================
-    priority_encoder_4in DUT (.*);
+    priority_encoder_4in_if DUT (.*);
 
     // ============================================================================
     // Golden Reference関数
@@ -74,7 +74,7 @@ module priority_encoder_4in_tb;
 
         // テスト開始メッセージ
         $display("=================================================");
-        $display("Priority Encoder 4-input Test");
+        $display("Priority Encoder 4-input (if-else) Test");
         $display("=================================================");
 
         // 全16パターンをテスト（4'b0000 ～ 4'b1111）
@@ -98,25 +98,4 @@ module priority_encoder_4in_tb;
         $finish;
     end
 
-endmodule : priority_encoder_4in_tb
-
-
-// ============================================================================
-// テストベンチ設計のポイント
-// ============================================================================
-// 1. 全16パターンを網羅的にテスト（完全なカバレッジ）
-// 2. Golden reference関数で期待値を自動計算
-//    - calc_expected_result: result の期待値
-//    - calc_expected_valid: valid の期待値（全て0の場合のみ0）
-// 3. assertを使って自動的にエラーを検出
-// 4. === 演算子でX/Z値も厳密にチェック
-// 5. タイムアウト保護でハングを防ぐ
-// 6. ブロッキング代入 (=) を使用（組み合わせ回路）
-//
-// 動作確認:
-// - エラーなしで "Tests completed." が表示されることを確認
-// - エラー時は該当の入力値と期待値/実際値が表示される
-//
-// validのテスト:
-// - inputs = 4'b0000 のときのみ valid = 0
-// - それ以外の全てのケースで valid = 1
+endmodule : priority_encoder_4in_if_tb
