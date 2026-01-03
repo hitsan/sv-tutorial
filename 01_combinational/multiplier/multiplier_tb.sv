@@ -39,8 +39,8 @@ module multiplier_tb;
 
     for (int i = 0; i < NUM_TESTS; i++) begin
       // ランダムな入力を生成
-      in0 = $urandom;
-      in1 = $urandom;
+      in0 = INPUT_WIDTH'($urandom);
+      in1 = INPUT_WIDTH'($urandom);
       #10;
 
       // 期待値を計算
