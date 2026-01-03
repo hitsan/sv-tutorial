@@ -8,9 +8,9 @@
 `timescale 1ns / 100ps
 
 module priority_encoder_4in_case (
-  input  logic [3:0] inputs,
-  output logic [1:0] result,
-  output logic valid
+    input logic [3:0] inputs,
+    output logic [1:0] result,
+    output logic valid
 );
   always_comb begin
     valid = 1'b1;
@@ -22,7 +22,7 @@ module priority_encoder_4in_case (
       4'b0001: result = 2'b00;
       default: begin
         result = 2'b00;
-        valid = 1'b0;
+        valid  = 1'b0;
       end
     endcase
   end
