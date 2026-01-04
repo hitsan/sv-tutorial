@@ -35,6 +35,8 @@ module fir_filter_transposed #(
   // 利点: クリティカルパス = 1乗算 + 1加算（直接形は1乗算 + N-1加算）
 
   // TODO: 内部信号定義
+  localparam int MUL_WIDTH = DATA_WIDTH * 2;
+  logic signed [MUL_WIDTH-1:0] shift_reg;
 
   //========================================================================
   // TODO: 乗算
