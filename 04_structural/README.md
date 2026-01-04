@@ -16,31 +16,32 @@
 
 ## 学習の推奨順序
 
-凡例: ✓ = サンプル実装済み (examples/) | 📝 = 演習問題 (exercises/ → solutions/)
-
-### 1. 📝 基本的なモジュールインスタンス化 (exercises/module_inst.sv)
+### 1. 基本的なモジュールインスタンス化 (module_inst/)
+- **概要**: 既存のモジュールを接続して、より大きな回路を構築する基本的な手法
 - **学習内容**:
   - モジュールのインスタンス化
   - 名前付きポート接続
   - 位置ベースポート接続
-- **演習**: `../combinational/examples/`のモジュールを使って4:1マルチプレクサを構造記述で実装してください
-- **解答**: `solutions/module_inst.sv`（詰まったら参照）
+- **実装例**: 4:1マルチプレクサの構造記述
+- **ファイル**: `module_inst/`
 
-### 2. 📝 generate構文 (exercises/generate_example.sv)
+### 2. generate構文 (generate_example/)
+- **概要**: 繰り返しや条件によって回路構造を動的に生成する構文
 - **学習内容**:
   - `for generate` - 繰り返しパターン
   - `if generate` - 条件付き生成
   - `case generate` - 選択的生成
-- **演習**: リップルキャリー加算器を`for generate`で実装してください
-- **解答**: `solutions/generate_example.sv`（詰まったら参照）
+- **実装例**: リップルキャリー加算器
+- **ファイル**: `generate_example/`
 
-### 3. 📝 パラメータ化 (exercises/param_design.sv)
+### 3. パラメータ化 (param_design/)
+- **概要**: パラメータを使って柔軟で再利用可能な回路を設計する手法
 - **学習内容**:
   - パラメータオーバーライド
   - `localparam`の使用
   - `$clog2`などのシステム関数
-- **演習**: パラメータ化された加算器ツリーを実装してください
-- **解答**: `solutions/param_design.sv`（詰まったら参照）
+- **実装例**: パラメータ化された加算器ツリー
+- **ファイル**: `param_design/`
 
 ## インスタンス化の基本
 
@@ -163,9 +164,3 @@ generate
     end
 endgenerate
 ```
-
-## 次のステップ
-
-- **関連**: `../combinational/` - 組み合わせ回路モジュール
-- **関連**: `../sequential/` - 順序回路モジュール
-- **次**: 実践的な構造設計（プロセッサ、メモリコントローラ等）
