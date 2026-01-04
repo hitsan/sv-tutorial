@@ -13,9 +13,8 @@
 
 ## 学習の推奨順序
 
-凡例: ✓ = サンプル実装済み (examples/) | 📝 = 演習問題 (exercises/ → solutions/)
-
-### 1. ✓ 2:1マルチプレクサ (examples/mux2x1.sv)
+### 1. 2:1マルチプレクサ (mux2x1/mux2x1.sv)
+- **概要**: セレクタ信号に基づいて2つの入力から1つを選択して出力する回路
 - **学習内容**:
   - 組み合わせ回路の基本構文とガイドライン
   - `assign`文による記述
@@ -25,9 +24,10 @@
 - **重要ポイント**:
   - SystemVerilogでは1つのモジュールに1つの実装のみ
   - 複数の記述方法が同じ回路を生成
-- **ファイル**: `examples/mux2x1.sv`, `examples/mux2x1_tb.sv`
+- **ファイル**: `mux2x1/mux2x1.sv`, `mux2x1/mux2x1_tb.sv`
 
-### 2. 📝 4入力プライオリティエンコーダ (exercises/priority_encoder_4in.sv)
+### 2. 4入力プライオリティエンコーダ (priority_encoder/)
+- **概要**: 複数の入力のうち最も優先度の高い（最上位ビット）入力の位置を符号化して出力する回路
 - **学習内容**:
   - パックド配列 (packed arrays)
   - `if`文と`case`文の使い分け
@@ -35,10 +35,12 @@
 - **重要ポイント**:
   - プライオリティロジックには`if`文が適切
   - 等価比較には`case`文が効率的
-- **演習**: `examples/mux2x1.sv`を参考に、4入力のプライオリティエンコーダを実装してください
-- **解答**: `solutions/priority_encoder_4in.sv`（詰まったら参照）
+- **実装例**:
+  - `if`文による実装: `priority_encoder_4in_if.sv`
+  - `case`文による実装: `priority_encoder_4in_case.sv`
 
-### 3. 📝 パラメータ化プライオリティエンコーダ (exercises/priority_encoder.sv)
+### 3. パラメータ化プライオリティエンコーダ (priority_encoder/priority_encoder.sv)
+- **概要**: 入力ビット幅をパラメータで変更可能にした汎用的なプライオリティエンコーダ
 - **学習内容**:
   - `parameter`による汎用化
   - `always_comb`内での`for`ループ
@@ -47,10 +49,10 @@
 - **重要ポイント**:
   - パラメータで再利用性を向上
   - ビット幅の不一致を避ける方法
-- **演習**: priority_encoder_4in.svをパラメータ化して汎用的にしてください
-- **解答**: `solutions/priority_encoder.sv`（詰まったら参照）
+- **ファイル**: `priority_encoder/priority_encoder.sv`, `priority_encoder/priority_encoder_tb.sv`
 
-### 4. ✓ 加算器 (examples/adder.sv)
+### 4. 加算器 (adder/adder.sv)
+- **概要**: 2つの数値を加算し、キャリーやオーバーフローを検出できる算術演算回路
 - **学習内容**:
   - 算術演算
   - ブロッキング代入 vs ノンブロッキング代入
@@ -63,9 +65,10 @@
   - キャリーアウト付き加算器
   - キャリーイン/アウト付き加算器
   - オーバーフロー検出付き加算器
-- **ファイル**: `examples/adder.sv`
+- **ファイル**: `adder/adder.sv`
 
-### 5. 📝 乗算器 (exercises/multiplier.sv)
+### 5. 乗算器 (multiplier/multiplier.sv)
+- **概要**: 2つの数値を乗算する算術演算回路（符号付き/符号なしに対応）
 - **学習内容**:
   - `signed`と`unsigned`の扱い
   - `generate`文による繰り返し生成
@@ -75,10 +78,10 @@
 - **重要ポイント**:
   - 符号付き/符号なし演算の違い
   - 生成ブロックによる構造的記述
-- **演習**: `examples/adder.sv`を参考に、符号付き/符号なし乗算器を実装してください
-- **解答**: `solutions/multiplier.sv`（詰まったら参照）
+- **ファイル**: `multiplier/multiplier.sv`, `multiplier/multiplier_tb.sv`
 
-### 6. 📝 ALU (exercises/alu.sv)
+### 6. ALU (alu/alu.sv)
+- **概要**: 演算コードに基づいて複数の算術論理演算を実行できる演算装置（Arithmetic Logic Unit）
 - **学習内容**:
   - ラッチが生成される一般的な問題
   - ラッチを避ける戦略
@@ -89,8 +92,8 @@
   - 組み合わせ回路で意図しないラッチを生成しない
   - 完全な条件分岐の重要性
   - デフォルト値の設定
-- **演習**: 加算、減算、AND、OR、XOR、シフト演算を持つALUを設計してください
-- **解答**: `solutions/alu.sv`（詰まったら参照）
+- **実装例**: 加算、減算、AND、OR、XOR、シフト演算を持つALU
+- **ファイル**: `alu/alu.sv`, `alu/alu_pkg.sv`, `alu/alu_tb.sv`
 
 ## よくある間違いと対策
 
@@ -146,33 +149,7 @@ always_comb
 4. **適切なビット幅**: 演算結果が収まる十分なビット幅を確保
 5. **パラメータ化**: 再利用性のためにパラメータを活用
 
-## シミュレーションとテスト
-
-各モジュールには対応するテストベンチ（_tb.sv）が用意されています。
-テストベンチの詳細は`../../tb/`ディレクトリを参照してください。
-
-### シミュレーション実行例（VCS/Questa/Vivado等）
-```bash
-# examples/ ディレクトリに移動
-cd examples
-
-# VCS例
-vcs -sverilog mux2x1.sv mux2x1_tb.sv
-./simv
-
-# Questa例
-vlog -sv mux2x1.sv mux2x1_tb.sv
-vsim -c work.mux2x1_tb -do "run -all; quit"
-```
-
 ## 参考資料
 
 - IEEE 1800-2017 SystemVerilog LRM
 - 詳細な説明は各ソースファイル内のコメントを参照
-- テストベンチの書き方: `../../tb/README.md`
-
-## 次のステップ
-
-組み合わせ回路を理解したら、次は順序回路を学習してください:
-- **次**: `../sequential/` - レジスタとフリップフロップ
-- **関連**: `../structural/` - 構造的記述による回路の組み立て
