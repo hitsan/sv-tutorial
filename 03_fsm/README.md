@@ -71,30 +71,73 @@ FSMの設計では、コーディング前に以下を明確にします：
 
 ## 学習の推奨順序
 
-凡例: ✓ = サンプル実装済み (examples/) | 📝 = 演習問題 (exercises/ → solutions/)
-
-### 1. ✓ Moore型ステートマシン (examples/moore_fsm.sv)
+### 1. Moore型ステートマシン (moore_fsm/)
+- **概要**: 出力が現在の状態のみに依存する有限ステートマシンの基本実装
 - **学習内容**:
   - 1プロセスモデル vs 2プロセスモデル
   - enumを使った状態定義
   - 状態遷移ロジック
   - 出力ロジック（状態のみに依存）
-- **実装例**: シーケンス検出器、トラフィックライト
-- **ファイル**: `examples/moore_fsm.sv`（4つの実装例）
+- **実装例**:
+  - `moore_fsm_1process.sv`: 1プロセスモデル
+  - `moore_fsm_2process.sv`: 2プロセスモデル（推奨）
+  - `moore_fsm_multi_output.sv`: 複数出力の例
+- **ファイル**: `moore_fsm/`
 
-### 2. 📝 Mealy型ステートマシン (exercises/mealy_fsm.sv)
+### 2. トラフィックライト制御 (traffic_light_moore/)
+- **概要**: Moore型FSMを使った信号機制御システムの実装
 - **学習内容**:
-  - 2プロセスモデルの実装
-  - 入力依存の出力
-  - Moore vs Mealyの違い
-  - ハイブリッド実装（Moore + Mealy）
-- **演習**: エッジ検出器やパルス生成器をMealy型で実装してください
-- **解答**: `solutions/mealy_fsm.sv`（詰まったら参照）
+  - 実際のシステムへのMoore型FSMの適用
+  - タイマーを使った状態遷移
+  - 複数出力の制御（赤・黄・青信号）
+- **ファイル**: `traffic_light_moore/`
 
-### 3. 📝 実践的なFSM例
-- **演習1**: UART送受信制御FSM (`exercises/uart_fsm.sv` → `solutions/uart_fsm.sv`)
-- **演習2**: メモリコントローラFSM (`exercises/mem_ctrl_fsm.sv` → `solutions/mem_ctrl_fsm.sv`)
-- **演習3**: プロトコル実装（I2C, SPI等）のFSM
+### 3. エッジ検出器 (edge_detector/)
+- **概要**: 入力信号の立ち上がり/立ち下がりエッジを検出する回路（Moore型とMealy型の比較）
+- **学習内容**:
+  - Moore型とMealy型の違いを実例で比較
+  - エッジ検出ロジックの実装
+  - レイテンシの違い
+- **実装例**:
+  - `edge_detector_moore/`: Moore型実装
+  - `edge_detector_mealy/`: Mealy型実装
+- **ファイル**: `edge_detector/`
+
+### 4. パルス生成器 (pulse_generator_mealy/)
+- **概要**: Mealy型FSMを使った1クロックパルス生成回路
+- **学習内容**:
+  - Mealy型FSMの基本実装
+  - 入力に応じた即座の出力生成
+  - パルス幅の制御
+- **ファイル**: `pulse_generator_mealy/`
+
+### 5. シーケンス検出器 (sequence_detector_mealy/)
+- **概要**: 特定のビットパターンを検出するMealy型FSM
+- **学習内容**:
+  - パターンマッチング用のFSM設計
+  - 重複シーケンスの処理
+  - Mealy型による低レイテンシ検出
+- **ファイル**: `sequence_detector_mealy/`
+
+### 6. UART送受信制御 (uart_fsm/)
+- **概要**: UART通信プロトコルの送信・受信を制御するFSM
+- **学習内容**:
+  - 実際の通信プロトコルのFSM実装
+  - ボーレートタイミング制御
+  - スタート/ストップビットの処理
+  - パリティチェック
+- **実装例**:
+  - `uart_fsm.sv`: 統合UART FSM
+  - 個別の送信・受信FSM
+- **ファイル**: `uart_fsm/`
+
+### 7. ハンドシェイクコントローラ (handshake_controller/)
+- **概要**: valid/readyハンドシェイクプロトコルを制御するFSM
+- **学習内容**:
+  - バックプレッシャー対応の制御
+  - ハンドシェイク信号の管理
+  - データフロー制御
+- **ファイル**: `handshake_controller/`
 
 ## 状態のエンコーディング
 
@@ -303,13 +346,6 @@ end
        transition_cp: coverpoint {current_state, next_state};
    endgroup
    ```
-
-## 次のステップ
-
-FSMを理解したら、以下のトピックに進んでください:
-- **次**: 実践的なFSM例（UART, メモリコントローラ等）
-- **関連**: `../sequential/` - レジスタとカウンタ
-- **検証**: `../../tb/` - FSMのテスト手法
 
 ## 参考資料
 
