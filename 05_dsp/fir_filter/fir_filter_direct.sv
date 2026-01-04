@@ -5,6 +5,8 @@
 // License: MIT
 //============================================================================
 
+`timescale 1ns / 1ps
+
 module fir_filter_direct #(
     parameter int DATA_WIDTH = 16,  // 入力データのビット幅
     parameter int COEFF_WIDTH = 16,  // 係数のビット幅
@@ -24,24 +26,33 @@ module fir_filter_direct #(
 );
 
   // TODO: 内部信号定義
-
-  //========================================================================
+  logic signed [  DATA_WIDTH-1:0] shift_reg[0:NUM_TAPS-1];
+  logic signed [DATA_WIDTH*2-1:0] accum;
   // TODO: シフトレジスタ（遅延線）
-  // 最新のサンプルをshift_reg[0]に格納し、古いサンプルを順次シフト
-  //========================================================================
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      for (int i = 0; i < NUM_TAPS; i++) begin
+        shift_reg[i] <= '0;
+      end
+    end else begin
+      shift_reg[0] <= data_in;
+      for (int i = 1; i < NUM_TAPS; i++) begin
+        shift_reg[i] <= shift_reg[i-1];
+      end
+    end
+  end
 
-  //========================================================================
   // TODO: MAC演算（Multiply-Accumulate）
   // 各タップの係数とサンプルを乗算し、すべてを加算
-  //========================================================================
+  assign accum = COEFF_0 * shift_reg[0] + COEFF_1 * shift_reg[1] + COEFF_2 * shift_reg[2] + COEFF_3 * shift_reg[3];
 
-  //========================================================================
   // TODO: 出力（スケーリング）
   // Q1.15 * Q1.15 = Q2.30 なので、15ビット右シフトでQ1.15に戻す
-  //========================================================================
+  assign data_out = 16'(accum >> 15);
 
-  //========================================================================
   // TODO: valid信号の遅延（1サイクルのレイテンシ）
-  //========================================================================
-
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) valid_out <= 1'b0;
+    else valid_out <= valid_in;
+  end
 endmodule
