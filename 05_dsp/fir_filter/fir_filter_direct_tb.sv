@@ -44,7 +44,7 @@ module fir_filter_direct_tb;
     // テストシーケンス
     initial begin
         // VCD波形ダンプ
-        $dumpfile("fir_filter_direct_tb.vcd");
+        $dumpfile("05_dsp/fir_filter/obj_dir/fir_filter_direct_tb.vcd");
         $dumpvars(0, fir_filter_direct_tb);
 
         // 初期化
@@ -102,7 +102,7 @@ module fir_filter_direct_tb;
         for (int i = 0; i < 16; i++) begin
             real angle = 2.0 * 3.14159265 * i / 16.0;
             real sin_val = $sin(angle);
-            logic signed [15:0] sin_q15 = int'(sin_val * 32767.0);
+            shortint sin_q15 = shortint'($rtoi(sin_val * 32767.0));
             send_sample(sin_q15);
         end
 
