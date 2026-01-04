@@ -44,7 +44,7 @@ module fir_filter_direct_tb;
     // テストシーケンス
     initial begin
         // VCD波形ダンプ
-        $dumpfile("fir_filter_direct_tb.vcd");
+        $dumpfile("05_dsp/fir_filter/obj_dir/fir_filter_direct_tb.vcd");
         $dumpvars(0, fir_filter_direct_tb);
 
         // 初期化
