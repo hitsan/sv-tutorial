@@ -7,6 +7,6 @@ module hw_scheduler #(
     input  logic [NUM_REQUESTERS-1:0] request,
     output logic [NUM_REQUESTERS-1:0] grant
 );
-    // TODO: ラウンドロビンカウンタ
-    // TODO: リクエスト検出とグラント生成
+    // TODO: 優先度カウンタ
+    // TODO: グラント生成
 endmodule

@@ -20,6 +20,6 @@ module dma_m2s #(
     output logic                   stream_valid,
     input  logic                   stream_ready
 );
-    // TODO: FSMによる転送制御
-    // TODO: アドレス生成とカウンタ
+    // TODO: 転送制御FSM
+    // TODO: アドレス生成
 endmodule

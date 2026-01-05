@@ -14,7 +14,7 @@ module direct_mapped_cache #(
     output logic                   hit,
     output logic                   miss
 );
-    // TODO: タグ、データ、validビットの配列
-    // TODO: アドレス分解（tag, index）
+    // TODO: キャッシュメモリ配列（tag, data, valid）
+    // TODO: アドレス分解とインデックス計算
     // TODO: ヒット/ミス判定
 endmodule
