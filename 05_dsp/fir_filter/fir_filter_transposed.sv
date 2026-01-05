@@ -36,22 +36,43 @@ module fir_filter_transposed #(
 
   // TODO: 内部信号定義
   localparam int MUL_WIDTH = DATA_WIDTH * 2;
-  logic signed [MUL_WIDTH-1:0] shift_reg;
+  logic signed [MUL_WIDTH-1:0] mul  [NUM_TAPS-1:0];
+  logic signed [MUL_WIDTH-1:0] accum[NUM_TAPS-1:0];
 
-  //========================================================================
   // TODO: 乗算
-  //========================================================================
+  always_comb begin
+    mul[0] = data_in * COEFF_0;
+    mul[1] = data_in * COEFF_1;
+    mul[2] = data_in * COEFF_2;
+    mul[3] = data_in * COEFF_3;
+  end
 
-  //========================================================================
   // TODO: 転置形の加算器チェーン
-  //========================================================================
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      for (int i = 0; i < NUM_TAPS; i++) accum[i] <= '0;
+    end else begin
+      accum[0] <= mul[0];
+      for (int i = 1; i < NUM_TAPS; i++) begin
+        accum[i] <= mul[i] + accum[i-1];
+      end
+    end
+  end
 
-  //========================================================================
   // TODO: 出力とスケーリング
-  //========================================================================
+  assign data_out = 16'(accum[NUM_TAPS-1] >> 15);
 
-  //========================================================================
   // TODO: valid信号の遅延
-  //========================================================================
+  logic [NUM_TAPS-2:0] valid_reg;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!valid_in) valid_out = '0;
+    else begin
+      valid[0] <= valid_in;
+      for (int i = 1; i < NUM_TAPS - 2; i++) begin
+        valid[i] <= valid[i-1];
+      end
+      valid_out <= valid[NUM_TAPS-2];
+    end
+  end
 
 endmodule
