@@ -5,6 +5,8 @@
 // License: MIT
 //============================================================================
 
+`timescale 1ns / 1ps
+
 module fir_filter_transposed #(
     parameter int DATA_WIDTH = 16,
     parameter int COEFF_WIDTH = 16,
@@ -67,11 +69,11 @@ module fir_filter_transposed #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!valid_in) valid_out = '0;
     else begin
-      valid[0] <= valid_in;
+      valid_reg[0] <= valid_in;
       for (int i = 1; i < NUM_TAPS - 2; i++) begin
-        valid[i] <= valid[i-1];
+        valid_reg[i] <= valid_reg[i-1];
       end
-      valid_out <= valid[NUM_TAPS-2];
+      valid_out <= valid_reg[NUM_TAPS-2];
     end
   end
 
