@@ -37,9 +37,10 @@ module fir_filter_transposed #(
   // 利点: クリティカルパス = 1乗算 + 1加算（直接形は1乗算 + N-1加算）
 
   // TODO: 内部信号定義
-  localparam int MUL_WIDTH = DATA_WIDTH * 2;
-  logic signed [MUL_WIDTH-1:0] mul  [NUM_TAPS-1:0];
-  logic signed [MUL_WIDTH-1:0] accum[NUM_TAPS-1:0];
+  localparam int MUL_WIDTH = DATA_WIDTH + COEFF_WIDTH;
+  localparam int ACCUM_WIDTH = MUL_WIDTH + $clog2(NUM_TAPS);
+  logic signed [MUL_WIDTH-1:0] mul[NUM_TAPS-1:0];
+  logic signed [ACCUM_WIDTH-1:0] accum[NUM_TAPS-1:0];
 
   // TODO: 乗算
   always_comb begin
@@ -53,7 +54,7 @@ module fir_filter_transposed #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       for (int i = 0; i < NUM_TAPS; i++) accum[i] <= '0;
-    end else begin
+    end else if (valid_in) begin
       accum[0] <= mul[0];
       for (int i = 1; i < NUM_TAPS; i++) begin
         accum[i] <= mul[i] + accum[i-1];
@@ -62,19 +63,36 @@ module fir_filter_transposed #(
   end
 
   // TODO: 出力とスケーリング
-  assign data_out = 16'(accum[NUM_TAPS-1] >> 15);
+  localparam int SCALE_SHIFT = 15;
+  localparam int SCALED_WIDTH = ACCUM_WIDTH - SCALE_SHIFT;
+  logic signed [SCALED_WIDTH-1:0] scaled;
+  logic signed [ACCUM_WIDTH-1:0] scaled_full;
+  assign scaled_full = accum[NUM_TAPS-1] >>> SCALE_SHIFT;
+  assign scaled = scaled_full[SCALED_WIDTH-1:0];
+
+  // 飽和処理の範囲をDATA_WIDTHから計算
+  localparam int MAX_DATA = (1 << (DATA_WIDTH - 1)) - 1;
+  localparam int MIN_DATA = -(1 << (DATA_WIDTH - 1));
+
+  // 飽和処理（signedデータ値の範囲にクリップ）
+  always_comb begin
+    if (scaled > SCALED_WIDTH'($signed(MAX_DATA)))
+      data_out = MAX_DATA[DATA_WIDTH-1:0];
+    else if (scaled < SCALED_WIDTH'($signed(MIN_DATA)))
+      data_out = MIN_DATA[DATA_WIDTH-1:0];
+    else data_out = scaled[DATA_WIDTH-1:0];
+  end
 
   // TODO: valid信号の遅延
-  logic [NUM_TAPS-2:0] valid_reg;
+  // 転置形のレイテンシはNUM_TAPSサイクル
+  logic [NUM_TAPS-1:0] valid_shift;
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!valid_in) valid_out = '0;
-    else begin
-      valid_reg[0] <= valid_in;
-      for (int i = 1; i < NUM_TAPS - 2; i++) begin
-        valid_reg[i] <= valid_reg[i-1];
-      end
-      valid_out <= valid_reg[NUM_TAPS-2];
+    if (!rst_n) begin
+      valid_shift <= '0;
+    end else begin
+      valid_shift <= {valid_shift[NUM_TAPS-2:0], valid_in};
     end
   end
+  assign valid_out = valid_shift[NUM_TAPS-1];
 
 endmodule

@@ -34,11 +34,12 @@ module fir_filter_pipelined #(
   // クリティカルパス: 乗算 または 加算（分割される）
 
   // TODO: 内部信号定義
-  localparam int MUL_WIDTH = DATA_WIDTH * 2;
-  logic [DATA_WIDTH-1:0] in_reg[NUM_TAPS-1:0];
-  logic [MUL_WIDTH-1:0] mul_reg[NUM_TAPS-1:0];
-  logic [MUL_WIDTH-1:0] mul_pipe[NUM_TAPS-1:0];
-  logic [MUL_WIDTH-1:0] accum;
+  localparam int MUL_WIDTH = DATA_WIDTH + COEFF_WIDTH;
+  localparam int ACCUM_WIDTH = MUL_WIDTH + $clog2(NUM_TAPS);
+  logic signed [DATA_WIDTH-1:0] in_reg[NUM_TAPS-1:0];
+  logic signed [MUL_WIDTH-1:0] mul_reg[NUM_TAPS-1:0];
+  logic signed [MUL_WIDTH-1:0] mul_pipe[NUM_TAPS-1:0];
+  logic signed [ACCUM_WIDTH-1:0] accum;
   logic [1:0] valid_stage;
 
   // TODO: Stage 0 - シフトレジスタ
@@ -47,7 +48,7 @@ module fir_filter_pipelined #(
       for (int i = 0; i < NUM_TAPS; i++) begin
         in_reg[i] <= '0;
       end
-    end else begin
+    end else if (valid_in) begin
       in_reg[0] <= data_in;
       for (int i = 1; i < NUM_TAPS; i++) begin
         in_reg[i] <= in_reg[i-1];
@@ -69,7 +70,7 @@ module fir_filter_pipelined #(
       for (int i = 0; i < NUM_TAPS; i++) begin
         mul_pipe[i] <= '0;
       end
-    end else begin
+    end else if (valid_stage[0]) begin
       for (int i = 0; i < NUM_TAPS; i++) begin
         mul_pipe[i] <= mul_reg[i];
       end
@@ -81,7 +82,25 @@ module fir_filter_pipelined #(
   assign accum = mul_pipe[0] + mul_pipe[1] + mul_pipe[2] + mul_pipe[3];
 
   // TODO: 出力（スケーリング）
-  assign data_out = 16'(accum >> 15);
+  localparam int SCALE_SHIFT = 15;
+  localparam int SCALED_WIDTH = ACCUM_WIDTH - SCALE_SHIFT;
+  logic signed [SCALED_WIDTH-1:0] scaled;
+  logic signed [ACCUM_WIDTH-1:0] scaled_full;
+  assign scaled_full = accum >>> SCALE_SHIFT;
+  assign scaled = scaled_full[SCALED_WIDTH-1:0];
+
+  // 飽和処理の範囲をDATA_WIDTHから計算
+  localparam int MAX_DATA = (1 << (DATA_WIDTH - 1)) - 1;
+  localparam int MIN_DATA = -(1 << (DATA_WIDTH - 1));
+
+  // 飽和処理（signedデータ値の範囲にクリップ）
+  always_comb begin
+    if (scaled > SCALED_WIDTH'($signed(MAX_DATA)))
+      data_out = MAX_DATA[DATA_WIDTH-1:0];
+    else if (scaled < SCALED_WIDTH'($signed(MIN_DATA)))
+      data_out = MIN_DATA[DATA_WIDTH-1:0];
+    else data_out = scaled[DATA_WIDTH-1:0];
+  end
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) valid_stage <= 2'b00;
