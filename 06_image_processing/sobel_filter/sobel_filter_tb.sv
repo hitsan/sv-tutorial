@@ -591,8 +591,12 @@ module sobel_filter_tb;
         // Gx = [-1  0  +1]    Gy = [-1 -2 -1]
         //      [-2  0  +2]         [ 0  0  0]
         //      [-1  0  +1]         [+1 +2 +1]
-        gx = -p[0][0] + p[0][2] - 2 * p[1][0] + 2 * p[1][2] - p[2][0] + p[2][2];
-        gy = -p[0][0] - 2 * p[0][1] - p[0][2] + p[2][0] + 2 * p[2][1] + p[2][2];
+        gx = -pixel_to_int(p[0][0]) + pixel_to_int(p[0][2])
+             - 2 * pixel_to_int(p[1][0]) + 2 * pixel_to_int(p[1][2])
+             - pixel_to_int(p[2][0]) + pixel_to_int(p[2][2]);
+        gy = -pixel_to_int(p[0][0]) - 2 * pixel_to_int(p[0][1])
+             - pixel_to_int(p[0][2]) + pixel_to_int(p[2][0])
+             + 2 * pixel_to_int(p[2][1]) + pixel_to_int(p[2][2]);
 
         // 勾配強度の近似（|Gx| + |Gy|）
         gradient = abs(gx) + abs(gy);
@@ -652,6 +656,10 @@ module sobel_filter_tb;
   // 絶対値関数
   function int abs(int value);
     return (value < 0) ? -value : value;
+  endfunction
+
+  function int pixel_to_int(input logic [PIXEL_WIDTH-1:0] value);
+    return int'(value);
   endfunction
 
 endmodule
