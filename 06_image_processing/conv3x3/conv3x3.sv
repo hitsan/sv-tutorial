@@ -41,7 +41,6 @@ module conv3x3 #(
         line_buf1[i] <= '0;
       end
     end else if (valid_in) begin
-      // ラインバッファをシフト
       for (int i = IMAGE_WIDTH - 1; i > 0; i--) begin
         line_buf0[i] <= line_buf0[i-1];
         line_buf1[i] <= line_buf1[i-1];
@@ -51,19 +50,6 @@ module conv3x3 #(
     end
   end
   localparam int WINDOW_SIZE = 3;
-
-  logic [PIXEL_WIDTH-1:0] line_reg[2:0];
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      for (int i = 0; i < 3; i++) begin
-        line_reg[i] <= '0;
-      end
-    end else if (valid_in) begin
-      line_reg[0] <= pixel_in;
-      line_reg[1] <= line_reg[0];
-      line_reg[2] <= line_reg[1];
-    end
-  end
 
   // TODO: 入力ストリームから3x3ウィンドウを構成
   logic [PIXEL_WIDTH-1:0] window_reg[WINDOW_SIZE-1:0][WINDOW_SIZE-1:0];
@@ -75,38 +61,66 @@ module conv3x3 #(
         end
       end
     end else if (valid_in) begin
-      for (int i = 0; i < IMAGE_WIDTH - 2; i++) begin
-        for (int j = 0; j < IMAGE_WIDTH - 2; j++) begin
-          window_reg[i][j] <= line_buf0[i];
-          window_reg[i][j+1] <= line_buf0[i+1];
-          window_reg[i][j+2] <= line_buf0[i+2];
-          window_reg[i+1][j] <= line_buf1[i];
-          window_reg[i+1][j+1] <= line_buf1[i+1];
-          window_reg[i+1][j+2] <= line_buf1[i+2];
-          window_reg[i+2][j] <= line_reg[0];
-          window_reg[i+2][j+1] <= line_reg[1];
-          window_reg[i+2][j+2] <= line_reg[2];
-        end
-      end
+      window_reg[0][0] <= window_reg[0][1];
+      window_reg[0][1] <= window_reg[0][2];
+      window_reg[0][2] <= line_buf1[IMAGE_WIDTH-1];
+
+      window_reg[1][0] <= window_reg[1][1];
+      window_reg[1][1] <= window_reg[1][2];
+      window_reg[1][2] <= line_buf0[IMAGE_WIDTH-1];
+
+      window_reg[2][0] <= window_reg[2][1];
+      window_reg[2][1] <= window_reg[2][2];
+      window_reg[2][2] <= pixel_in;
     end
   end
-  // TODO: カーネル係数との畳み込み演算
-  localparam int CONV_WIDTH = PIXEL_WIDTH + $clog2(PIXEL_WIDTH);
-  logic [PIXEL_WIDTH-1:0] accum;
-  assign accum = window_reg[0][0]+ window_reg[0][1] + window_reg[0][2] +
-    window_reg[1][0]+ window_reg[1][1] + window_reg[1][2] +
-    window_reg[2][0]+ window_reg[2][1] + window_reg[2][2];
+  // カーネル係数との畳み込み演算
+  localparam int CONV_WIDTH = PIXEL_WIDTH + COEFF_WIDTH + 4;
+  logic signed [CONV_WIDTH-1:0] sum;
 
-  // TODO: スケーリング・飽和処理して出力
-  assign pixel_out = accum >> SCALE_SHIFT;
+  assign sum = $signed(
+      {1'b0, window_reg[0][0]}
+  ) * K00 + $signed(
+      {1'b0, window_reg[0][1]}
+  ) * K01 + $signed(
+      {1'b0, window_reg[0][2]}
+  ) * K02 + $signed(
+      {1'b0, window_reg[1][0]}
+  ) * K10 + $signed(
+      {1'b0, window_reg[1][1]}
+  ) * K11 + $signed(
+      {1'b0, window_reg[1][2]}
+  ) * K12 + $signed(
+      {1'b0, window_reg[2][0]}
+  ) * K20 + $signed(
+      {1'b0, window_reg[2][1]}
+  ) * K21 + $signed(
+      {1'b0, window_reg[2][2]}
+  ) * K22;
 
-  // TODO: ウォームアップ期間を考慮したvalid信号生成
-  localparam DELAY_SIZE = WINDOW_SIZE * WINDOW_SIZE;
-  logic [DELAY_SIZE-2:0] valid_shift;
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) valid_shift <= '0;
-    else valid_shift <= {valid_shift[DELAY_SIZE-2:1], valid_in};
+  // スケーリング・飽和処理して出力
+  logic signed [CONV_WIDTH-1:0] scaled;
+  assign scaled = sum >>> SCALE_SHIFT;
+
+  // 飽和処理（-128〜127の範囲にクリップ）
+  always_comb begin
+    if (scaled > 127) pixel_out = 127;
+    else if (scaled < -128) pixel_out = -128;
+    else pixel_out = scaled[PIXEL_WIDTH-1:0];
   end
-  assign valid_out = valid_shift[DELAY_SIZE-2];
+
+  // ウォームアップ期間を考慮したvalid信号生成
+  localparam int WARMUP_CYCLES = 2 * IMAGE_WIDTH + 3;
+  int pixel_count;
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      pixel_count <= '0;
+    end else if (valid_in) begin
+      if (pixel_count < WARMUP_CYCLES) pixel_count <= pixel_count + 1;
+    end
+  end
+
+  assign valid_out = valid_in && (pixel_count >= WARMUP_CYCLES);
 
 endmodule
