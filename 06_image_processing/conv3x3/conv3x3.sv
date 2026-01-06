@@ -102,10 +102,14 @@ module conv3x3 #(
   logic signed [CONV_WIDTH-1:0] scaled;
   assign scaled = sum >>> SCALE_SHIFT;
 
-  // 飽和処理（-128〜127の範囲にクリップ）
+  // 飽和処理の範囲をPIXEL_WIDTHから計算
+  localparam int MAX_PIXEL = (1 << (PIXEL_WIDTH - 1)) - 1;  // 2^(N-1) - 1
+  localparam int MIN_PIXEL = -(1 << (PIXEL_WIDTH - 1));  // -2^(N-1)
+
+  // 飽和処理（signedピクセル値の範囲にクリップ）
   always_comb begin
-    if (scaled > 127) pixel_out = 127;
-    else if (scaled < -128) pixel_out = -128;
+    if (scaled > CONV_WIDTH'($signed(MAX_PIXEL))) pixel_out = MAX_PIXEL[PIXEL_WIDTH-1:0];
+    else if (scaled < CONV_WIDTH'($signed(MIN_PIXEL))) pixel_out = MIN_PIXEL[PIXEL_WIDTH-1:0];
     else pixel_out = scaled[PIXEL_WIDTH-1:0];
   end
 
