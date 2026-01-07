@@ -24,13 +24,15 @@ module sobel_filter #(
   // [-2  0  +2]             [ 0  0  0]
   // [-1  0  +1]             [+1 +2 +1]
 
+  localparam int CONV_OUTPUT_WIDTH = 12;
   // TODO: 水平エッジ検出（Gx）
-  logic signed [PIXEL_WIDTH-1:0] gx_out;
+  logic signed [CONV_OUTPUT_WIDTH-1:0] gx_out;
   logic valid_gx_out;
   conv3x3 #(
       .PIXEL_WIDTH(PIXEL_WIDTH),
       .IMAGE_WIDTH(IMAGE_WIDTH),
       .COEFF_WIDTH(8),
+      .OUTPUT_WIDTH(CONV_OUTPUT_WIDTH),
       .K00(-8'sd1),
       .K01(8'sd0),
       .K02(8'sd1),
@@ -51,12 +53,13 @@ module sobel_filter #(
   );
 
   // TODO: 垂直エッジ検出（Gy）
-  logic signed [PIXEL_WIDTH-1:0] gy_out;
+  logic signed [CONV_OUTPUT_WIDTH-1:0] gy_out;
   logic valid_gy_out;
   conv3x3 #(
       .PIXEL_WIDTH(PIXEL_WIDTH),
       .IMAGE_WIDTH(IMAGE_WIDTH),
       .COEFF_WIDTH(8),
+      .OUTPUT_WIDTH(CONV_OUTPUT_WIDTH),
       .K00(-8'sd1),
       .K01(-8'sd2),
       .K02(-8'sd1),
@@ -77,9 +80,9 @@ module sobel_filter #(
   );
 
   // TODO: 勾配強度の計算
-  logic [  PIXEL_WIDTH:0] gradient;
-  logic [PIXEL_WIDTH-1:0] gx_abs;
-  logic [PIXEL_WIDTH-1:0] gy_abs;
+  logic [  CONV_OUTPUT_WIDTH:0] gradient;
+  logic [CONV_OUTPUT_WIDTH-1:0] gx_abs;
+  logic [CONV_OUTPUT_WIDTH-1:0] gy_abs;
   always_comb begin
     gx_abs   = (gx_out < 0) ? -gx_out : gx_out;
     gy_abs   = (gy_out < 0) ? -gy_out : gy_out;
