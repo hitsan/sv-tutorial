@@ -1,4 +1,7 @@
-// UDP RX - 簡易版スケルトン
+// UDP RX (受信)
+// UDPヘッダ解析とペイロード抽出
+
+`timescale 1ns / 1ps
 module udp_rx #(
     parameter int DATA_WIDTH = 8,
     parameter logic [15:0] LOCAL_PORT = 16'd1234

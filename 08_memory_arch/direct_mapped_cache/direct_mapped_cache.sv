@@ -1,4 +1,7 @@
-// Direct-Mapped Cache - 簡易版（4エントリ）
+// ダイレクトマップドキャッシュ
+// 小規模4エントリ構成の例
+
+`timescale 1ns / 1ps
 module direct_mapped_cache #(
     parameter int ADDR_WIDTH = 16,
     parameter int DATA_WIDTH = 32,

@@ -1,4 +1,7 @@
-// Hardware Scheduler (Round-Robin) - 簡易版
+// ハードウェアスケジューラ (ラウンドロビン)
+// リクエストを順番にグラント
+
+`timescale 1ns / 1ps
 module hw_scheduler #(
     parameter int NUM_REQUESTERS = 4
 ) (

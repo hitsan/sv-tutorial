@@ -1,4 +1,7 @@
-// UDP Loopback Example - 簡易版スケルトン
+// UDP ループバック例
+// 受信ペイロードを送信側へ折り返す
+
+`timescale 1ns / 1ps
 module simple_udp_loopback (
     input  logic       clk,
     input  logic       rst_n,

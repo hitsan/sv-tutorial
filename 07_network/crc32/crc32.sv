@@ -1,9 +1,7 @@
-//============================================================================
-// File: crc32.sv
-// Description: Ethernet CRC32計算モジュール（LFSR実装）
-// Author: SystemVerilog Tutorial
-// License: MIT
-//============================================================================
+// CRC32 計算モジュール
+// Ethernet CRC32 を LFSR で計算
+
+`timescale 1ns / 1ps
 
 module crc32 #(
     parameter logic [31:0] POLYNOMIAL = 32'h04C11DB7  // Ethernet CRC32多項式

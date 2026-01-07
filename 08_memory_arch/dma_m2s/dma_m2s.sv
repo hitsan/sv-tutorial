@@ -1,4 +1,7 @@
-// DMA (Memory to Stream) - 簡易版
+// DMA (Memory to Stream)
+// メモリからストリームへ読み出す簡易例
+
+`timescale 1ns / 1ps
 module dma_m2s #(
     parameter int ADDR_WIDTH = 16,
     parameter int DATA_WIDTH = 32

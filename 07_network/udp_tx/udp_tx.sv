@@ -1,4 +1,7 @@
-// UDP TX - 簡易版スケルトン
+// UDP TX (送信)
+// UDPヘッダ生成とペイロード出力
+
+`timescale 1ns / 1ps
 module udp_tx #(
     parameter int DATA_WIDTH = 8
 ) (

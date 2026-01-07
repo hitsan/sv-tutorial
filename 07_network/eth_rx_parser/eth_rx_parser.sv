@@ -1,5 +1,7 @@
-// Ethernet RX Parser - 簡易版スケルトン
-// 詳細な実装は学習者が追加可能
+// Ethernet RX パーサ
+// 受信フレームからMAC/Type/ペイロードを抽出
+
+`timescale 1ns / 1ps
 
 module eth_rx_parser #(
     parameter int DATA_WIDTH = 8
