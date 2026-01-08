@@ -107,7 +107,7 @@ module crc32_tb;
 
         // フレーム送信
         if (length == 0) begin
-            // 空フレーム
+            // 空フレーム: sof と eof を同時にアサート
             @(posedge clk);
             sof = 1;
             eof = 1;
@@ -115,7 +115,19 @@ module crc32_tb;
             @(posedge clk);
             sof = 0;
             eof = 0;
+        end else if (length == 1) begin
+            // 1バイトフレーム: sof, eof, valid を同時にアサート
+            @(posedge clk);
+            sof = 1;
+            eof = 1;
+            data_in = data[0];
+            valid_in = 1;
+            @(posedge clk);
+            sof = 0;
+            eof = 0;
+            valid_in = 0;
         end else begin
+            // 複数バイトフレーム
             // フレーム開始
             @(posedge clk);
             sof = 1;
@@ -124,16 +136,19 @@ module crc32_tb;
             @(posedge clk);
             sof = 0;
 
-            // データ送信
-            for (int i = 1; i < length; i++) begin
-                send_byte(data[i]);
+            // 中間データ送信
+            for (int i = 1; i < length - 1; i++) begin
+                data_in = data[i];
+                valid_in = 1;
+                @(posedge clk);
             end
 
-            // フレーム終了
-            @(posedge clk);
+            // 最終バイト: eof と valid を同時にアサート
+            data_in = data[length - 1];
+            valid_in = 1;
             eof = 1;
-            valid_in = 0;
             @(posedge clk);
+            valid_in = 0;
             eof = 0;
         end
 
@@ -158,14 +173,12 @@ module crc32_tb;
             end
         end
 
-        // 次のテストのために少し待つ
-        repeat(2) @(posedge clk);
-    endtask
-
-    task send_byte(input logic [7:0] byte_data);
-        @(posedge clk);
-        data_in = byte_data;
-        valid_in = 1;
+        // 次のテストのために信号をクリア
+        data_in = 0;
+        valid_in = 0;
+        sof = 0;
+        eof = 0;
+        repeat(3) @(posedge clk);
     endtask
 
 endmodule
