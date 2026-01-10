@@ -16,21 +16,19 @@ module crc32 #(
     output logic [31:0] crc_out,
     output logic        crc_valid
 );
-
-  // TODO: CRCレジスタ
   logic [31:0] crc_reg;
+  logic [31:0] crc_base;
+
+  assign crc_base = sof ? 32'hFFFF_FFFF : crc_reg;
+
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) crc_reg <= 32'hFFFF_FFFF;
-    else if (valid_in & sof) begin
-      crc_reg <= calc_crc(32'hFFFF_FFFF, data_in);
-    end else if (sof) begin
-      crc_reg <= 32'hFFFF_FFFF;
-    end else if (valid_in) begin
-      crc_reg <= calc_crc(crc_reg, data_in);
-    end
+    else if (valid_in) crc_reg <= calc_crc(crc_base, data_in);
+    else if (sof) crc_reg <= 32'hFFFF_FFFF;
   end
+
   assign crc_out = crc_reg ^ 32'hFFFF_FFFF;
-  // TODO: 8ビット入力に対するCRC計算
+
   function automatic logic [31:0] calc_crc(logic [31:0] crc, logic [7:0] data);
     logic [31:0] next_crc;
 
