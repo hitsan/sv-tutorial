@@ -17,14 +17,17 @@ module crc32 #(
     output logic        crc_valid
 );
   logic [31:0] crc_reg;
-  logic [31:0] crc_base;
-
-  assign crc_base = sof ? 32'hFFFF_FFFF : crc_reg;
+  logic [31:0] crc_next;
+  always_comb begin
+    crc_next = crc_reg;
+    if (valid_in) begin
+      crc_next = calc_crc(sof ? 32'hFFFFFFFF : crc_reg, data_in);
+    end else if (sof) crc_next = 32'hFFFF_FFFF;
+  end
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) crc_reg <= 32'hFFFF_FFFF;
-    else if (valid_in) crc_reg <= calc_crc(crc_base, data_in);
-    else if (sof) crc_reg <= 32'hFFFF_FFFF;
+    else crc_reg <= crc_next;
   end
 
   assign crc_out = crc_reg ^ 32'hFFFF_FFFF;
@@ -34,20 +37,14 @@ module crc32 #(
 
     next_crc = crc ^ {24'b0, data};
     for (int i = 0; i < 8; i++) begin
-      if (next_crc[0]) begin
-        next_crc = (next_crc >> 1) ^ POLYNOMIAL;
-      end else begin
-        next_crc = next_crc >> 1;
-      end
+      if (next_crc[0]) next_crc = (next_crc >> 1) ^ POLYNOMIAL;
+      else next_crc = next_crc >> 1;
     end
     return next_crc;
   endfunction
 
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      crc_valid <= 0;
-    end else begin
-      crc_valid <= eof;
-    end
+    if (!rst_n) crc_valid <= 0;
+    else crc_valid <= eof;
   end
 endmodule
