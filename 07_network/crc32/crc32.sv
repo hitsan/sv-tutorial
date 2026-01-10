@@ -35,7 +35,7 @@ module crc32 #(
     logic [31:0] next_crc;
 
     next_crc = crc ^ {24'b0, data};
-    for (int i = 1; i <= 8; i++) begin
+    for (int i = 0; i < 8; i++) begin
       if (next_crc[0]) begin
         next_crc = (next_crc >> 1) ^ POLYNOMIAL;
       end else begin
