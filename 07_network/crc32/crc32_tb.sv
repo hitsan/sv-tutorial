@@ -72,18 +72,18 @@ module crc32_tb;
         // Test 3: 2バイト
         test_count++;
         $display("\n[Test %0d] Two bytes: 0xFF 0xFF", test_count);
-        send_frame_and_check(2, '{8'hFF, 8'hFF}, 32'hFFFFFFFF);
+        send_frame_and_check(2, '{8'hFF, 8'hFF}, 32'hFFFF0000);
 
         // Test 4: 空フレーム（データなし）
         test_count++;
         $display("\n[Test %0d] Empty frame", test_count);
-        send_frame_and_check(0, '{}, 32'hFFFFFFFF);
+        send_frame_and_check(0, '{}, 32'h00000000);
 
         // Test 5: 連続フレーム
         test_count++;
         $display("\n[Test %0d] Consecutive frames", test_count);
-        send_frame_and_check(3, '{8'hAA, 8'hBB, 8'hCC}, 32'h898B52B6);
-        send_frame_and_check(3, '{8'h11, 8'h22, 8'h33}, 32'h338E7D99);
+        send_frame_and_check(3, '{8'hAA, 8'hBB, 8'hCC}, 32'hBE4DF84C);
+        send_frame_and_check(3, '{8'h11, 8'h22, 8'h33}, 32'hFAC73763);
 
         repeat(5) @(posedge clk);
         $display("\n=== CRC32 Test Complete ===");
