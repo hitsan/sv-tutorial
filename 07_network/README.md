@@ -53,6 +53,15 @@
   - EtherType解析
   - ペイロード出力
 - **ファイル**: `eth_rx_parser/eth_rx_parser.sv`, `eth_rx_parser/eth_rx_parser_tb.sv`
+- **仕様（学習向け提案）**:
+  - 入力は8-bitの`data_in`と`valid_in`。
+  - プレアンブル（7x `0x55`）とSFD（`0xD5`）は連続必須（ギャップ不可）。
+  - SFD以降はDA(6) -> SA(6) -> EtherType(2) -> payloadの順でパース。
+  - フレーム終端は`valid_in`の低下で判定。
+  - ギャップ（`valid_in=0`）はペイロード中のみ許容し、最大連続4サイクルまで。
+  - `frame_err`でSFD不一致/ギャップ超過/短小フレームを通知。
+  - EtherType/Lengthの判別はしない（常にEtherType扱い）。
+  - VLAN/FCSは未対応。
 
 ### 3. UDP RX (udp_rx/udp_rx.sv)
 - **概要**: UDPパケットの受信処理モジュール（簡易版、IPv4前提）
