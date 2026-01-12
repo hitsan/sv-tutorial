@@ -313,9 +313,9 @@ module eth_rx_parser_tb;
     repeat (5) @(posedge clk);
   endtask
 
-  task send_byte_with_gap(input logic [7:0] byte, input int gap_cycles);
+  task send_byte_with_gap(input logic [7:0] data_byte, input int gap_cycles);
     @(negedge clk);
-    data_in  = byte;
+    data_in  = data_byte;
     valid_in = 1;
     if (gap_cycles > 0) begin
       repeat (gap_cycles) begin
