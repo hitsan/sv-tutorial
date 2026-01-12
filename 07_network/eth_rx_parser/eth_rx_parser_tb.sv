@@ -69,7 +69,7 @@ module eth_rx_parser_tb;
     $display("\n[Test %0d] Standard IPv4 frame", test_count);
     send_ethernet_frame(48'hFFFF_FFFF_FFFF,  // Destination MAC (broadcast)
                         48'h0011_2233_4455,  // Source MAC
-                        16'h0800,  // EtherType (IPv4)
+                        16'h0806,  // EtherType (IPv4)
                         '{
                             8'h45,
                             8'h00,
@@ -83,7 +83,7 @@ module eth_rx_parser_tb;
     $display("\n[Test %0d] ARP frame", test_count);
     send_ethernet_frame(48'hFFFF_FFFF_FFFF,  // Destination MAC
                         48'h0011_2233_4455,  // Source MAC
-                        16'h0806,  // EtherType (ARP)
+                        16'h0800,  // EtherType (ARP)
                         '{
                             8'h00,
                             8'h01,
@@ -133,12 +133,7 @@ module eth_rx_parser_tb;
     test_count++;
     $display("\n[Test %0d] Payload with gaps", test_count);
     send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
-                        '{
-                            8'h01,
-                            8'h02,
-                            8'h03,
-                            8'h04
-                        },
+                        '{8'h01, 8'h02, 8'h03, 8'h04},
                         1  // Insert 1-cycle gaps between bytes
                             );
 
@@ -146,24 +141,13 @@ module eth_rx_parser_tb;
     test_count++;
     $display("\n[Test %0d] Header gaps within limit", test_count);
     send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
-                        '{
-                            8'h10,
-                            8'h20,
-                            8'h30,
-                            8'h40
-                        },
-                        2);
+                        '{8'h10, 8'h20, 8'h30, 8'h40}, 2);
 
     // Test 8: Gap exceeds max (should error)
     test_count++;
     $display("\n[Test %0d] Gap exceeds max", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
-                        '{
-                            8'hAA,
-                            8'hBB
-                        },
-                        MAX_GAP_CYCLES + 1,
-                        1);
+    send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800, '{8'hAA, 8'hBB},
+                        MAX_GAP_CYCLES + 1, 1);
 
     repeat (10) @(posedge clk);
     $display("\n=== Ethernet RX Parser Test Complete ===");

@@ -38,109 +38,111 @@ module eth_rx_parser #(
   state_t current;
   state_t next;
   always_ff @(posedge clk or negedge rst_n) begin
-    if (rst_n) current <= IDLE;
+    if (!rst_n) current <= IDLE;
     else current <= next;
   end
 
   logic [2:0] byte_cnt;
-  logic [2:0] gap_cnt;
+  logic byte_cnt_s;
   always_ff @(posedge clk or negedge rst_n) begin
-    case (next)
+    if (!rst_n) byte_cnt <= '0;
+    else if (byte_cnt_s & valid_in) byte_cnt <= byte_cnt + 1;
+    else byte_cnt <= '0;
+  end
+
+  logic [2:0] gap_cnt;
+  logic gap_cnt_s;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) gap_cnt <= '0;
+    else if (gap_cnt_s & !valid_in) gap_cnt <= gap_cnt + 1;
+    else gap_cnt <= '0;
+  end
+
+  always_comb begin
+    byte_cnt_s = 0;
+    gap_cnt_s = 0;
+    next = current;
+    case (current)
       IDLE: begin
-        byte_cnt <= '0;
-        if (valid_in & data_in == 8'h55) begin
-          next = PREAMBLE;
-        end
+        if (valid_in & data_in == 8'h55) next = PREAMBLE;
       end
       PREAMBLE: begin
-        if (data_in == 8'h55) byte_cnt <= byte_cnt + 1;
-        else if (byte_cnt >= 6 & data_in == 8'hD5) begin
-          byte_cnt <= '0;
-          next <= DA;
-        end else if (!valid_in) begin
-          byte_cnt <= '0;
-          next = IDLE;
+        if (!valid_in) next = IDLE;
+        else begin
+          if (data_in == 8'h55) byte_cnt_s = 1;
+          else if (byte_cnt >= 6 & data_in == 8'hD5) next = DA;
         end
       end
       DA: begin
-        if (byte_cnt >= 5) begin
-          byte_cnt <= '0;
-          next <= SA;
-        end else begin
-          byte_cnt <= byte_cnt + 1;
-        end
+        if (gap_cnt >= 4) next = IDLE;
+        else if (byte_cnt >= 5) next = SA;
+        else if (!valid_in) gap_cnt_s = 1;
+        else if (valid_in) byte_cnt_s = 1;
       end
       SA: begin
-        if (byte_cnt >= 5) begin
-          byte_cnt <= '0;
-          next <= TYPE;
-        end else begin
-          byte_cnt <= byte_cnt + 1;
-        end
+        if (gap_cnt >= 4) next = IDLE;
+        else if (byte_cnt >= 5) next = TYPE;
+        else if (!valid_in) gap_cnt_s = 1;
+        else if (valid_in) byte_cnt_s = 1;
       end
       TYPE: begin
-        if (byte_cnt >= 1) begin
-          byte_cnt <= '0;
-          next <= PAYLOAD;
-        end else begin
-          byte_cnt <= byte_cnt + 1;
-        end
+        if (gap_cnt >= 4) next = IDLE;
+        else if (byte_cnt >= 1) next = PAYLOAD;
+        else if (!valid_in) gap_cnt_s = 1;
+        else if (valid_in) byte_cnt_s = 1;
       end
       PAYLOAD: begin
-        if (valid_in) begin
-          payload_out <= data_in;
-          payload_valid <= 1;
-          byte_cnt <= byte_cnt + 1;
-          gap_cnt <= '0;
-        end else if (!valid_in) begin
-          if (gap_cnt > 4) begin
-            if (byte_cnt >= 4) begin
-              next <= IDLE;
-              byte_cnt <= '0;
-              gap_cnt <= '0;
-            end else begin
-              next <= IDLE;
-              byte_cnt <= '0;
-              gap_cnt <= '0;
-            end
-          end else begin
-            gap_cnt <= gap_cnt + 1;
-          end
-        end
+        if (gap_cnt >= 4) next = IDLE;
+        else if (!valid_in) gap_cnt_s = 1;
+        else if (valid_in) byte_cnt_s = 1;
       end
       default: begin
-        byte_cnt <= '0;
-        next <= IDLE;
+        next = IDLE;
       end
     endcase
   end
 
   logic [47:0] dst_reg;
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) dst_reg <= '0;
-    else if (next == DA) begin
-      dst_reg <= {dst_reg[39:0], data_in};
-    end
-  end
-  assign dst_mac = dst_reg;
-
   logic [47:0] src_reg;
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) src_reg <= '0;
-    else if (next == SA) begin
-      src_reg <= {src_reg[39:0], data_in};
-    end
-  end
-  assign src_mac = src_reg;
-
   logic [15:0] ether_type_reg;
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) ether_type_reg <= '0;
-    else if (next == TYPE) begin
-      ether_type_reg <= {ether_type_reg[7:0], data_in};
+    if (!rst_n) begin
+      dst_reg <= '0;
+      src_reg <= '0;
+      ether_type_reg <= '0;
+    end else begin
+      case (current)
+        IDLE: begin
+          dst_reg <= '0;
+          src_reg <= '0;
+          ether_type_reg <= '0;
+        end
+        DA: begin
+          if (valid_in) dst_reg <= {dst_reg[39:0], data_in};
+        end
+        SA: begin
+          if (valid_in) src_reg <= {src_reg[39:0], data_in};
+        end
+        TYPE: begin
+          if (valid_in) begin
+            ether_type_reg <= {ether_type_reg[7:0], data_in};
+          end
+        end
+        PAYLOAD: begin
+          if (valid_in) payload_out <= data_in;
+        end
+        default: ;
+      endcase
     end
   end
-  assign ether_type = ether_type_reg;
 
+  always_ff @(posedge clk) begin
+    if (!rst_n) payload_valid <= 0;
+    else if (current == PAYLOAD & valid_in) payload_valid <= 1;
+    else payload_valid <= 0;
+  end
+  assign dst_mac = dst_reg;
+  assign src_mac = src_reg;
+  assign ether_type = ether_type_reg;
 
 endmodule
