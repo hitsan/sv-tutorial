@@ -43,26 +43,25 @@ module eth_rx_parser #(
   end
 
   logic [2:0] byte_cnt;
-  logic byte_cnt_s;
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) byte_cnt <= '0;
     else if (next != current) byte_cnt <= '0;
-    else if (byte_cnt_s) byte_cnt <= byte_cnt + 1;
-    else if (gap_cnt_s) byte_cnt <= byte_cnt;
+    else if (valid_in && current == PREAMBLE && data_in == 8'h55) begin
+      byte_cnt <= byte_cnt + 1;
+    end
+    else if (valid_in) byte_cnt <= byte_cnt + 1;
+    else if (!valid_in) byte_cnt <= byte_cnt;
   end
 
   logic [2:0] gap_cnt;
-  logic gap_cnt_s;
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) gap_cnt <= '0;
     else if (next != current) gap_cnt <= '0;
-    else if (gap_cnt_s) gap_cnt <= gap_cnt + 1;
-    else if (byte_cnt_s) gap_cnt <= '0;
+    else if (!valid_in) gap_cnt <= gap_cnt + 1;
+    else if (valid_in) gap_cnt <= '0;
   end
 
   always_comb begin
-    byte_cnt_s = 0;
-    gap_cnt_s = 0;
     next = current;
     case (current)
       IDLE: begin
@@ -71,32 +70,23 @@ module eth_rx_parser #(
       PREAMBLE: begin
         if (!valid_in) next = IDLE;
         else begin
-          if (data_in == 8'h55) byte_cnt_s = 1;
-          else if (byte_cnt >= 6 & data_in == 8'hD5) next = DA;
+          if (byte_cnt >= 6 & data_in == 8'hD5) next = DA;
         end
       end
       DA: begin
         if (gap_cnt > 4) next = IDLE;
-        else if (byte_cnt > 5) next = SA;
-        else if (!valid_in) gap_cnt_s = 1;
-        else if (valid_in) byte_cnt_s = 1;
+        else if (byte_cnt >= 5 & valid_in) next = SA;
       end
       SA: begin
         if (gap_cnt > 4) next = IDLE;
-        else if (byte_cnt > 5) next = TYPE;
-        else if (!valid_in) gap_cnt_s = 1;
-        else if (valid_in) byte_cnt_s = 1;
+        else if (byte_cnt >= 5 & valid_in) next = TYPE;
       end
       TYPE: begin
         if (gap_cnt > 4) next = IDLE;
-        else if (byte_cnt > 1) next = PAYLOAD;
-        else if (!valid_in) gap_cnt_s = 1;
-        else if (valid_in) byte_cnt_s = 1;
+        else if (byte_cnt >= 1 & valid_in) next = PAYLOAD;
       end
       PAYLOAD: begin
         if (gap_cnt > 4) next = IDLE;
-        else if (!valid_in) gap_cnt_s = 1;
-        else if (valid_in) byte_cnt_s = 1;
       end
       default: begin
         next = IDLE;
