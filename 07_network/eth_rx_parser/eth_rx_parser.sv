@@ -46,16 +46,18 @@ module eth_rx_parser #(
   logic byte_cnt_s;
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) byte_cnt <= '0;
-    else if (byte_cnt_s & valid_in) byte_cnt <= byte_cnt + 1;
-    else byte_cnt <= '0;
+    else if (next != current) byte_cnt <= '0;
+    else if (byte_cnt_s) byte_cnt <= byte_cnt + 1;
+    else if (gap_cnt_s) byte_cnt <= byte_cnt;
   end
 
   logic [2:0] gap_cnt;
   logic gap_cnt_s;
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) gap_cnt <= '0;
-    else if (gap_cnt_s & !valid_in) gap_cnt <= gap_cnt + 1;
-    else gap_cnt <= '0;
+    else if (next != current) gap_cnt <= '0;
+    else if (gap_cnt_s) gap_cnt <= gap_cnt + 1;
+    else if (byte_cnt_s) gap_cnt <= '0;
   end
 
   always_comb begin
@@ -74,25 +76,25 @@ module eth_rx_parser #(
         end
       end
       DA: begin
-        if (gap_cnt >= 4) next = IDLE;
-        else if (byte_cnt >= 5) next = SA;
+        if (gap_cnt > 4) next = IDLE;
+        else if (byte_cnt > 5) next = SA;
         else if (!valid_in) gap_cnt_s = 1;
         else if (valid_in) byte_cnt_s = 1;
       end
       SA: begin
-        if (gap_cnt >= 4) next = IDLE;
-        else if (byte_cnt >= 5) next = TYPE;
+        if (gap_cnt > 4) next = IDLE;
+        else if (byte_cnt > 5) next = TYPE;
         else if (!valid_in) gap_cnt_s = 1;
         else if (valid_in) byte_cnt_s = 1;
       end
       TYPE: begin
-        if (gap_cnt >= 4) next = IDLE;
-        else if (byte_cnt >= 1) next = PAYLOAD;
+        if (gap_cnt > 4) next = IDLE;
+        else if (byte_cnt > 1) next = PAYLOAD;
         else if (!valid_in) gap_cnt_s = 1;
         else if (valid_in) byte_cnt_s = 1;
       end
       PAYLOAD: begin
-        if (gap_cnt >= 4) next = IDLE;
+        if (gap_cnt > 4) next = IDLE;
         else if (!valid_in) gap_cnt_s = 1;
         else if (valid_in) byte_cnt_s = 1;
       end
@@ -137,8 +139,7 @@ module eth_rx_parser #(
   end
 
   always_ff @(posedge clk) begin
-    if (!rst_n) payload_valid <= 0;
-    else if (current == PAYLOAD & valid_in) payload_valid <= 1;
+    if (current == PAYLOAD) payload_valid <= valid_in;
     else payload_valid <= 0;
   end
   assign dst_mac = dst_reg;
