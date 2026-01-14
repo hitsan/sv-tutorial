@@ -238,8 +238,10 @@ module eth_rx_parser_tb;
       end
     end
     if (timeout >= TIMEOUT_CYCLES) begin
-      $display("  [ERROR] Payload receive timeout!");
-      error_count++;
+      if (!expect_error) begin
+        $display("  [ERROR] Payload receive timeout!");
+        error_count++;
+      end
     end
 
     // 結果確認（実装があれば動作）

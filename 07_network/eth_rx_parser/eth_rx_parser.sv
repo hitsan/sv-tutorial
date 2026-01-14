@@ -132,8 +132,17 @@ module eth_rx_parser #(
     if (current == PAYLOAD) payload_valid <= valid_in;
     else payload_valid <= 0;
   end
+
+  always_comb begin
+    frame_err = 0;
+    if (current == PREAMBLE) begin
+      if (!valid_in) frame_err = 1;
+      else if (gap_cnt > 6 && data_in != 8'hD5) frame_err = 1;
+    end else if (current != PAYLOAD && gap_cnt > 4) frame_err = 1;
+  end
+
   assign dst_mac = dst_reg;
   assign src_mac = src_reg;
   assign ether_type = ether_type_reg;
-  assign frame_err = 0;
+
 endmodule
