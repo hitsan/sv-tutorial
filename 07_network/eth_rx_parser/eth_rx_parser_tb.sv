@@ -250,45 +250,60 @@ module eth_rx_parser_tb;
     $display("    EtherType:  0x%04h", etype_rcv);
     $display("    Payload:    %0d bytes received", payload_rcv_q.size());
 
-    // 検証（実装があれば有効）
-    if (dst_mac_rcv !== dst_mac_exp) begin
-      $display("  [ERROR] DST MAC mismatch!");
-      error_count++;
-    end else if (src_mac_rcv !== src_mac_exp) begin
-      $display("  [ERROR] SRC MAC mismatch!");
-      error_count++;
-    end else if (etype_rcv !== etype_exp) begin
-      $display("  [ERROR] EtherType mismatch!");
-      error_count++;
-    end else if (payload.size() > 0 && payload_rcv_q.size() == 0) begin
-      $display("  [ERROR] Payload missing! Expected: %0d bytes", payload.size());
-      error_count++;
-    end else if (payload_rcv_q.size() > 0 && payload_rcv_q.size() !== payload.size()) begin
-      $display("  [ERROR] Payload size mismatch! Expected: %0d, Got: %0d", payload.size(),
-               payload_rcv_q.size());
-      error_count++;
-    end else if (payload_rcv_q.size() > 0) begin
-      // ペイロード内容の検証
-      logic payload_ok = 1;
-      for (int m = 0; m < payload.size(); m++) begin
-        if (payload_rcv_q[m] !== payload[m]) begin
-          $display("  [ERROR] Payload mismatch at byte %0d: got 0x%02h, expected 0x%02h", m,
-                   payload_rcv_q[m], payload[m]);
-          payload_ok = 0;
-          error_count++;
-          break;
-        end
-      end
-      if (payload_ok) begin
-        $display("  [OK]");
+    // frame_err検証: エラー発生時はレジスタが全て0になる
+    logic frame_err_detected;
+    frame_err_detected = (dst_mac_rcv == 48'h0 && src_mac_rcv == 48'h0 && etype_rcv == 16'h0);
+
+    if (expect_error) begin
+      // エラーが期待される場合
+      if (frame_err_detected) begin
+        $display("  [OK] Frame error detected as expected (registers cleared)");
+      end else begin
+        $display("  [ERROR] Expected frame error but frame was valid!");
+        error_count++;
       end
     end else begin
-      $display("  [OK]");
-    end
-
-    if (expect_error && error_count == error_before) begin
-      $display("  [ERROR] Expected error did not occur!");
-      error_count++;
+      // 正常なフレームが期待される場合
+      if (frame_err_detected) begin
+        $display("  [ERROR] Unexpected frame error (registers cleared)!");
+        error_count++;
+      end else begin
+        // 通常の検証
+        if (dst_mac_rcv !== dst_mac_exp) begin
+          $display("  [ERROR] DST MAC mismatch!");
+          error_count++;
+        end else if (src_mac_rcv !== src_mac_exp) begin
+          $display("  [ERROR] SRC MAC mismatch!");
+          error_count++;
+        end else if (etype_rcv !== etype_exp) begin
+          $display("  [ERROR] EtherType mismatch!");
+          error_count++;
+        end else if (payload.size() > 0 && payload_rcv_q.size() == 0) begin
+          $display("  [ERROR] Payload missing! Expected: %0d bytes", payload.size());
+          error_count++;
+        end else if (payload_rcv_q.size() > 0 && payload_rcv_q.size() !== payload.size()) begin
+          $display("  [ERROR] Payload size mismatch! Expected: %0d, Got: %0d", payload.size(),
+                   payload_rcv_q.size());
+          error_count++;
+        end else if (payload_rcv_q.size() > 0) begin
+          // ペイロード内容の検証
+          logic payload_ok = 1;
+          for (int m = 0; m < payload.size(); m++) begin
+            if (payload_rcv_q[m] !== payload[m]) begin
+              $display("  [ERROR] Payload mismatch at byte %0d: got 0x%02h, expected 0x%02h", m,
+                       payload_rcv_q[m], payload[m]);
+              payload_ok = 0;
+              error_count++;
+              break;
+            end
+          end
+          if (payload_ok) begin
+            $display("  [OK]");
+          end
+        end else begin
+          $display("  [OK]");
+        end
+      end
     end
 
     // 次のテストのために信号をクリア
