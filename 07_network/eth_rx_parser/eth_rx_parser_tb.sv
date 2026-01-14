@@ -23,6 +23,7 @@ module eth_rx_parser_tb;
   logic [          15:0] ether_type;
   logic [DATA_WIDTH-1:0] payload_out;
   logic                  payload_valid;
+  logic                  frame_err;
   logic [           7:0] payload_rcv_q   [$];
 
   int                    error_count = 0;
@@ -40,7 +41,8 @@ module eth_rx_parser_tb;
       .src_mac      (src_mac),
       .ether_type   (ether_type),
       .payload_out  (payload_out),
-      .payload_valid(payload_valid)
+      .payload_valid(payload_valid),
+      .frame_err    (frame_err)
   );
 
   // クロック生成
@@ -175,6 +177,7 @@ module eth_rx_parser_tb;
     logic [47:0] dst_mac_rcv;
     logic [47:0] src_mac_rcv;
     logic [15:0] etype_rcv;
+    logic frame_err_detected;
     int timeout;
     int error_before;
 
@@ -251,7 +254,6 @@ module eth_rx_parser_tb;
     $display("    Payload:    %0d bytes received", payload_rcv_q.size());
 
     // frame_err検証: エラー発生時はレジスタが全て0になる
-    logic frame_err_detected;
     frame_err_detected = (dst_mac_rcv == 48'h0 && src_mac_rcv == 48'h0 && etype_rcv == 16'h0);
 
     if (expect_error) begin

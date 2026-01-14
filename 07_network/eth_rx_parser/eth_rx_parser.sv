@@ -23,7 +23,8 @@ module eth_rx_parser #(
     output logic [          47:0] src_mac,
     output logic [          15:0] ether_type,
     output logic [DATA_WIDTH-1:0] payload_out,
-    output logic                  payload_valid
+    output logic                  payload_valid,
+    output logic                  frame_err
 );
   // TODO: FSMベースのEthernetパーサ実装
   // 状態: IDLE, PREAMBLE, DA, SA, TYPE, PAYLOAD
@@ -48,8 +49,7 @@ module eth_rx_parser #(
     else if (next != current) byte_cnt <= '0;
     else if (valid_in && current == PREAMBLE && data_in == 8'h55) begin
       byte_cnt <= byte_cnt + 1;
-    end
-    else if (valid_in) byte_cnt <= byte_cnt + 1;
+    end else if (valid_in) byte_cnt <= byte_cnt + 1;
     else if (!valid_in) byte_cnt <= byte_cnt;
   end
 
@@ -135,5 +135,5 @@ module eth_rx_parser #(
   assign dst_mac = dst_reg;
   assign src_mac = src_reg;
   assign ether_type = ether_type_reg;
-
+  assign frame_err = 0;
 endmodule
