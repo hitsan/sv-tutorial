@@ -12,7 +12,7 @@ module eth_rx_parser_tb;
   localparam int CLK_PERIOD = 10;
   localparam int TIMEOUT_CYCLES = 200;
   localparam int DATA_WIDTH = 8;
-  localparam int MAX_GAP_CYCLES = 4;
+  localparam int GAP_CYCLES_ERROR = 1;
 
   logic                  clk;
   logic                  rst_n;
@@ -69,7 +69,8 @@ module eth_rx_parser_tb;
     // Test 1: 標準的なEthernetフレーム (IPv4)
     test_count++;
     $display("\n[Test %0d] Standard IPv4 frame", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF,  // Destination MAC (broadcast)
+    send_ethernet_frame("Standard IPv4 frame",
+                        48'hFFFF_FFFF_FFFF,  // Destination MAC (broadcast)
                         48'h0011_2233_4455,  // Source MAC
                         16'h0806,  // EtherType (IPv4)
                         '{
@@ -83,7 +84,8 @@ module eth_rx_parser_tb;
     // Test 2: ARP frame
     test_count++;
     $display("\n[Test %0d] ARP frame", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF,  // Destination MAC
+    send_ethernet_frame("ARP frame",
+                        48'hFFFF_FFFF_FFFF,  // Destination MAC
                         48'h0011_2233_4455,  // Source MAC
                         16'h0800,  // EtherType (ARP)
                         '{
@@ -97,7 +99,8 @@ module eth_rx_parser_tb;
     // Test 3: IPv6 frame
     test_count++;
     $display("\n[Test %0d] IPv6 frame", test_count);
-    send_ethernet_frame(48'h3333_0000_0001,  // Destination MAC (IPv6 multicast)
+    send_ethernet_frame("IPv6 frame",
+                        48'h3333_0000_0001,  // Destination MAC (IPv6 multicast)
                         48'h0011_2233_4455,  // Source MAC
                         16'h86DD,  // EtherType (IPv6)
                         '{
@@ -111,7 +114,8 @@ module eth_rx_parser_tb;
     // Test 4: Unicast frame with specific MAC
     test_count++;
     $display("\n[Test %0d] Unicast frame", test_count);
-    send_ethernet_frame(48'hAA_BB_CC_DD_EE_FF,  // Destination MAC
+    send_ethernet_frame("Unicast frame",
+                        48'hAA_BB_CC_DD_EE_FF,  // Destination MAC
                         48'h11_22_33_44_55_66,  // Source MAC
                         16'h0800,  // EtherType (IPv4)
                         '{
@@ -125,31 +129,50 @@ module eth_rx_parser_tb;
     // Test 5: Short payload
     test_count++;
     $display("\n[Test %0d] Short payload", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
+    send_ethernet_frame("Short payload",
+                        48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
                         '{
                             8'hAA
                         }  // Single byte payload
                             );
 
-    // Test 6: Payload with gaps
+    // Test 6: Payload gap (should error)
     test_count++;
-    $display("\n[Test %0d] Payload with gaps", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
+    $display("\n[Test %0d] Payload gap (should error)", test_count);
+    send_ethernet_frame("Payload gap (should error)",
+                        48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
                         '{8'h01, 8'h02, 8'h03, 8'h04},
-                        1  // Insert 1-cycle gaps between bytes
+                        GAP_CYCLES_ERROR, 1
                             );
 
-    // Test 7: Header gaps within limit
+    // Test 7: Header gap (should error)
     test_count++;
-    $display("\n[Test %0d] Header gaps within limit", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
-                        '{8'h10, 8'h20, 8'h30, 8'h40}, 2);
+    $display("\n[Test %0d] Header gap (should error)", test_count);
+    send_ethernet_frame("Header gap (should error)",
+                        48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800,
+                        '{8'h10, 8'h20, 8'h30, 8'h40}, GAP_CYCLES_ERROR, 1);
 
-    // Test 8: Gap exceeds max (should error)
+    // Test 8: Multi-cycle gap (should error)
     test_count++;
-    $display("\n[Test %0d] Gap exceeds max", test_count);
-    send_ethernet_frame(48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800, '{8'hAA, 8'hBB},
-                        MAX_GAP_CYCLES + 1, 1);
+    $display("\n[Test %0d] Multi-cycle gap (should error)", test_count);
+    send_ethernet_frame("Multi-cycle gap (should error)",
+                        48'hFFFF_FFFF_FFFF, 48'h0011_2233_4455, 16'h0800, '{8'hAA, 8'hBB},
+                        GAP_CYCLES_ERROR + 2, 1);
+
+    // Test 9: Bad preamble byte (should error)
+    test_count++;
+    $display("\n[Test %0d] Bad preamble byte (should error)", test_count);
+    send_bad_preamble_byte("Bad preamble byte (should error)", 3);
+
+    // Test 10: Bad SFD (should error)
+    test_count++;
+    $display("\n[Test %0d] Bad SFD (should error)", test_count);
+    send_bad_sfd("Bad SFD (should error)", 8'hD4);
+
+    // Test 11: Short header (should error)
+    test_count++;
+    $display("\n[Test %0d] Short header (should error)", test_count);
+    send_short_header("Short header (should error)", 3);
 
     repeat (10) @(posedge clk);
     $display("\n=== Ethernet RX Parser Test Complete ===");
@@ -170,7 +193,8 @@ module eth_rx_parser_tb;
     end
   end
 
-  task send_ethernet_frame(input logic [47:0] dst_mac_exp, input logic [47:0] src_mac_exp,
+  task send_ethernet_frame(input string test_name, input logic [47:0] dst_mac_exp,
+                           input logic [47:0] src_mac_exp,
                            input logic [15:0] etype_exp, input logic [7:0] payload[$],
                            input int gap_cycles = 0, input logic expect_error = 0);
     int i;
@@ -183,7 +207,7 @@ module eth_rx_parser_tb;
 
     error_before = error_count;
 
-    $display("  Sending frame:");
+    $display("  Sending frame: %s", test_name);
     $display("    DST MAC:    %012h", dst_mac_exp);
     $display("    SRC MAC:    %012h", src_mac_exp);
     $display("    EtherType:  0x%04h", etype_exp);
@@ -191,31 +215,33 @@ module eth_rx_parser_tb;
 
     payload_rcv_q.delete();
 
+    frame_err_detected = 0;
+
     // プリアンブル送信 (7バイト 0x55)
     for (i = 0; i < 7; i++) begin
-      send_byte_with_gap(8'h55, 0);
+      send_byte_with_gap(8'h55, 0, frame_err_detected);
     end
 
     // SFD送信 (0xD5)
-    send_byte_with_gap(8'hD5, 0);
+    send_byte_with_gap(8'hD5, 0, frame_err_detected);
 
     // 宛先MACアドレス送信 (6バイト、MSB first)
     for (i = 0; i < 6; i++) begin
-      send_byte_with_gap(dst_mac_exp[47-i*8-:8], gap_cycles);
+      send_byte_with_gap(dst_mac_exp[47-i*8-:8], gap_cycles, frame_err_detected);
     end
 
     // 送信元MACアドレス送信 (6バイト、MSB first)
     for (i = 0; i < 6; i++) begin
-      send_byte_with_gap(src_mac_exp[47-i*8-:8], gap_cycles);
+      send_byte_with_gap(src_mac_exp[47-i*8-:8], gap_cycles, frame_err_detected);
     end
 
     // EtherType送信 (2バイト、MSB first)
-    send_byte_with_gap(etype_exp[15:8], gap_cycles);
-    send_byte_with_gap(etype_exp[7:0], gap_cycles);
+    send_byte_with_gap(etype_exp[15:8], gap_cycles, frame_err_detected);
+    send_byte_with_gap(etype_exp[7:0], gap_cycles, frame_err_detected);
 
     // ペイロード送信
     for (i = 0; i < payload.size(); i++) begin
-      send_byte_with_gap(payload[i], gap_cycles);
+      send_byte_with_gap(payload[i], gap_cycles, frame_err_detected);
     end
 
     // フレーム終了
@@ -226,12 +252,14 @@ module eth_rx_parser_tb;
     timeout  = 0;
     while (timeout < TIMEOUT_CYCLES) begin
       @(posedge clk);
+      if (frame_err) frame_err_detected = 1;
       timeout++;
       // ペイロード受信完了判定: 期待サイズ分受信 & 3サイクル連続でvalidが0
       if (payload_rcv_q.size() >= payload.size()) begin
         int no_valid_count = 0;
         for (int k = 0; k < 3; k++) begin
           @(posedge clk);
+          if (frame_err) frame_err_detected = 1;
           if (!payload_valid) no_valid_count++;
         end
         if (no_valid_count >= 2) break;
@@ -255,35 +283,35 @@ module eth_rx_parser_tb;
     $display("    EtherType:  0x%04h", etype_rcv);
     $display("    Payload:    %0d bytes received", payload_rcv_q.size());
 
-    // frame_err検証: エラー発生時はレジスタが全て0になる
-    frame_err_detected = (dst_mac_rcv == 48'h0 && src_mac_rcv == 48'h0 && etype_rcv == 16'h0);
+    if (frame_err) frame_err_detected = 1;
 
     if (expect_error) begin
       // エラーが期待される場合
       if (frame_err_detected) begin
-        $display("  [OK] Frame error detected as expected (registers cleared)");
+        $display("  [OK] Frame error detected as expected");
       end else begin
-        $display("  [ERROR] Expected frame error but frame was valid!");
+        $display("  [ERROR] Expected frame error but frame was valid! (%s)", test_name);
         error_count++;
       end
     end else begin
       // 正常なフレームが期待される場合
       if (frame_err_detected) begin
-        $display("  [ERROR] Unexpected frame error (registers cleared)!");
+        $display("  [ERROR] Unexpected frame error! (%s)", test_name);
         error_count++;
       end else begin
         // 通常の検証
         if (dst_mac_rcv !== dst_mac_exp) begin
-          $display("  [ERROR] DST MAC mismatch!");
+          $display("  [ERROR] DST MAC mismatch! (%s)", test_name);
           error_count++;
         end else if (src_mac_rcv !== src_mac_exp) begin
-          $display("  [ERROR] SRC MAC mismatch!");
+          $display("  [ERROR] SRC MAC mismatch! (%s)", test_name);
           error_count++;
         end else if (etype_rcv !== etype_exp) begin
-          $display("  [ERROR] EtherType mismatch!");
+          $display("  [ERROR] EtherType mismatch! (%s)", test_name);
           error_count++;
         end else if (payload.size() > 0 && payload_rcv_q.size() == 0) begin
-          $display("  [ERROR] Payload missing! Expected: %0d bytes", payload.size());
+          $display("  [ERROR] Payload missing! Expected: %0d bytes (%s)", payload.size(),
+                   test_name);
           error_count++;
         end else if (payload_rcv_q.size() > 0 && payload_rcv_q.size() !== payload.size()) begin
           $display("  [ERROR] Payload size mismatch! Expected: %0d, Got: %0d", payload.size(),
@@ -316,15 +344,118 @@ module eth_rx_parser_tb;
     repeat (5) @(posedge clk);
   endtask
 
-  task send_byte_with_gap(input logic [7:0] data_byte, input int gap_cycles);
+  task send_bad_preamble_byte(input string test_name, input int bad_pos);
+    int i;
+    logic frame_err_detected;
+
+    payload_rcv_q.delete();
+    frame_err_detected = 0;
+
+    for (i = 0; i < 7; i++) begin
+      if (i == bad_pos) send_byte_with_gap(8'h54, 0, frame_err_detected);
+      else send_byte_with_gap(8'h55, 0, frame_err_detected);
+    end
+    send_byte_with_gap(8'hD5, 0, frame_err_detected);
+
+    @(negedge clk);
+    valid_in = 0;
+
+    repeat (5) begin
+      @(posedge clk);
+      if (frame_err) frame_err_detected = 1;
+    end
+
+    if (frame_err_detected) $display("  [OK] Frame error detected as expected (%s)", test_name);
+    else begin
+      $display("  [ERROR] Expected frame error but frame was valid! (%s)", test_name);
+      error_count++;
+    end
+
+    data_in  = 0;
+    valid_in = 0;
+    repeat (5) @(posedge clk);
+  endtask
+
+  task send_bad_sfd(input string test_name, input logic [7:0] bad_sfd);
+    int i;
+    logic frame_err_detected;
+
+    payload_rcv_q.delete();
+    frame_err_detected = 0;
+
+    for (i = 0; i < 7; i++) begin
+      send_byte_with_gap(8'h55, 0, frame_err_detected);
+    end
+    send_byte_with_gap(bad_sfd, 0, frame_err_detected);
+
+    @(negedge clk);
+    valid_in = 0;
+
+    repeat (5) begin
+      @(posedge clk);
+      if (frame_err) frame_err_detected = 1;
+    end
+
+    if (frame_err_detected) $display("  [OK] Frame error detected as expected (%s)", test_name);
+    else begin
+      $display("  [ERROR] Expected frame error but frame was valid! (%s)", test_name);
+      error_count++;
+    end
+
+    data_in  = 0;
+    valid_in = 0;
+    repeat (5) @(posedge clk);
+  endtask
+
+  task send_short_header(input string test_name, input int da_bytes);
+    int i;
+    logic frame_err_detected;
+
+    payload_rcv_q.delete();
+    frame_err_detected = 0;
+
+    for (i = 0; i < 7; i++) begin
+      send_byte_with_gap(8'h55, 0, frame_err_detected);
+    end
+    send_byte_with_gap(8'hD5, 0, frame_err_detected);
+
+    for (i = 0; i < da_bytes; i++) begin
+      send_byte_with_gap(8'hAA, 0, frame_err_detected);
+    end
+
+    @(negedge clk);
+    valid_in = 0;
+
+    repeat (5) begin
+      @(posedge clk);
+      if (frame_err) frame_err_detected = 1;
+    end
+
+    if (frame_err_detected) $display("  [OK] Frame error detected as expected (%s)", test_name);
+    else begin
+      $display("  [ERROR] Expected frame error but frame was valid! (%s)", test_name);
+      error_count++;
+    end
+
+    data_in  = 0;
+    valid_in = 0;
+    repeat (5) @(posedge clk);
+  endtask
+
+  task send_byte_with_gap(input logic [7:0] data_byte, input int gap_cycles,
+                          ref logic frame_err_detected);
     @(negedge clk);
     data_in  = data_byte;
     valid_in = 1;
+    @(posedge clk);
+    if (frame_err) frame_err_detected = 1;
     if (gap_cycles > 0) begin
       repeat (gap_cycles) begin
         @(negedge clk);
         data_in  = 0;
         valid_in = 0;
+        @(posedge clk);
+        if (frame_err) frame_err_detected = 1;
       end
     end
   endtask
