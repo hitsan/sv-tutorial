@@ -12,7 +12,6 @@ module udp_rx_tb;
     localparam int CLK_PERIOD = 10;
     localparam int TIMEOUT_CYCLES = 200;
     localparam int DATA_WIDTH = 8;
-    localparam logic [15:0] LOCAL_PORT = 16'd1234;
 
     logic                  clk;
     logic                  rst_n;
@@ -64,8 +63,7 @@ module udp_rx_tb;
 
     // DUT
     udp_rx #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .LOCAL_PORT(LOCAL_PORT)
+        .DATA_WIDTH(DATA_WIDTH)
     ) dut (
         .clk          (clk),
         .rst_n        (rst_n),
@@ -141,6 +139,26 @@ module udp_rx_tb;
         send_udp_packet(16'd1111, 16'd1234, '{8'h01, 8'h02});
         send_udp_packet(16'd2222, 16'd1234, '{8'h03, 8'h04});
 
+        // Test 6: Length shorter than payload
+        test_count++;
+        $display("\n[Test %0d] Length shorter than payload", test_count);
+        send_udp_packet_custom_len(
+            16'd3333,
+            16'd1234,
+            '{8'h10, 8'h11, 8'h12, 8'h13},
+            16'd10  // Header(8) + 2 bytes
+        );
+
+        // Test 7: Length longer than payload
+        test_count++;
+        $display("\n[Test %0d] Length longer than payload", test_count);
+        send_udp_packet_custom_len(
+            16'd4444,
+            16'd1234,
+            '{8'h20, 8'h21},
+            16'd14  // Header(8) + 6 bytes
+        );
+
         repeat(10) @(posedge clk);
         $display("\n=== UDP RX Test Complete ===");
         $display("Total tests: %0d", test_count);
@@ -158,6 +176,15 @@ module udp_rx_tb;
         input logic [15:0] dst_port_exp,
         input logic [7:0]  payload[$]
     );
+        send_udp_packet_custom_len(src_port_exp, dst_port_exp, payload, 16'd0);
+    endtask
+
+    task send_udp_packet_custom_len(
+        input logic [15:0] src_port_exp,
+        input logic [15:0] dst_port_exp,
+        input logic [7:0]  payload[$],
+        input logic [15:0] udp_length_override
+    );
         int i;
         logic [15:0] src_port_rcv;
         logic [15:0] dst_port_rcv;
@@ -165,9 +192,13 @@ module udp_rx_tb;
         logic [15:0] udp_length;
         logic [15:0] checksum;
         int timeout;
+        int expected_payload_len;
+        logic extra_payload_seen;
 
         // UDP length = header(8) + payload
-        udp_length = 8 + payload.size();
+        udp_length = (udp_length_override != 0) ? udp_length_override : (8 + payload.size());
+        expected_payload_len = udp_length - 8;
+        extra_payload_seen = 0;
         // チェックサム計算
         checksum = calc_udp_checksum(src_port_exp, dst_port_exp, udp_length, payload);
 
@@ -227,18 +258,16 @@ module udp_rx_tb;
         while (timeout < TIMEOUT_CYCLES) begin
             @(posedge clk);
             if (payload_valid) begin
-                payload_rcv.push_back(payload_out);
+                if (payload_rcv.size() < expected_payload_len) begin
+                    payload_rcv.push_back(payload_out);
+                end else begin
+                    extra_payload_seen = 1;
+                end
             end
             timeout++;
-            // 期待サイズ分受信 & 3サイクル連続でvalidが0
-            if (payload_rcv.size() >= payload.size()) begin
-                int no_valid_count = 0;
-                for (int k = 0; k < 3; k++) begin
-                    @(posedge clk);
-                    if (!payload_valid) no_valid_count++;
-                    else if (payload_valid) payload_rcv.push_back(payload_out);
-                end
-                if (no_valid_count >= 2) break;
+            // Length基準で受信完了
+            if (payload_rcv.size() >= expected_payload_len) begin
+                break;
             end
         end
 
@@ -252,17 +281,25 @@ module udp_rx_tb;
         $display("    Payload:  %0d bytes received", payload_rcv.size());
 
         // 検証
-        if (src_port_rcv !== src_port_exp && src_port_rcv !== 0) begin
-            $display("  [ERROR] Source port mismatch!");
+        if (src_port_rcv !== src_port_exp) begin
+            $display("  [ERROR] Source port mismatch! Expected: %0d, Got: %0d",
+                     src_port_exp, src_port_rcv);
             error_count++;
-        end else if (dst_port_rcv !== dst_port_exp && dst_port_rcv !== 0) begin
-            $display("  [ERROR] Destination port mismatch!");
+        end else if (dst_port_rcv !== dst_port_exp) begin
+            $display("  [ERROR] Destination port mismatch! Expected: %0d, Got: %0d",
+                     dst_port_exp, dst_port_rcv);
             error_count++;
-        end else if (payload_rcv.size() > 0 && payload_rcv.size() !== payload.size()) begin
+        end else if (payload_rcv.size() !== payload.size()) begin
             $display("  [ERROR] Payload size mismatch! Expected: %0d, Got: %0d",
                      payload.size(), payload_rcv.size());
             error_count++;
-        end else if (payload_rcv.size() > 0) begin
+        end else if (timeout >= TIMEOUT_CYCLES && payload_rcv.size() < expected_payload_len) begin
+            $display("  [ERROR] Payload shorter than UDP Length field");
+            error_count++;
+        end else if (extra_payload_seen) begin
+            $display("  [ERROR] Payload length exceeded UDP Length field");
+            error_count++;
+        end else begin
             // ペイロード内容の検証
             logic payload_ok = 1;
             for (int j = 0; j < payload.size(); j++) begin
@@ -275,10 +312,8 @@ module udp_rx_tb;
                 end
             end
             if (payload_ok) begin
-                $display("  [OK]");
+                $display("  [OK] All checks passed");
             end
-        end else begin
-            $display("  [OK]");
         end
 
         // 次のテストのために信号をクリア
