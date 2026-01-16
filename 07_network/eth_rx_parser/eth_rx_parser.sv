@@ -26,7 +26,11 @@ module eth_rx_parser #(
     output logic                  payload_valid,
     output logic                  frame_err
 );
-  // TODO: FSMベースのEthernetパーサ実装
+  // 定数定義
+  localparam [3:0] PREAMBLE_BYTES = 7;
+  localparam [3:0] MAC_BYTES = 6;
+  localparam [3:0] ETYPE_BYTES = 2;
+
   // 状態: IDLE, PREAMBLE, DA, SA, TYPE, PAYLOAD, DROP
   typedef enum logic [2:0] {
     IDLE,
@@ -48,11 +52,11 @@ module eth_rx_parser #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n || next != current) byte_cnt <= '0;
     else if (valid_in) begin
-      if (current == PREAMBLE && data_in == 8'h55) byte_cnt <= byte_cnt + 1;
-      else if (current == PREAMBLE && byte_cnt >= 6 && data_in == 8'hD5) byte_cnt <= byte_cnt + 1;
-      else if ((current == DA || current == SA || current == TYPE)) begin
-        byte_cnt <= byte_cnt + 1;
-      end
+      case (current)
+        PREAMBLE: if (data_in == 8'h55) byte_cnt <= byte_cnt + 1;
+        DA, SA, TYPE: byte_cnt <= byte_cnt + 1;
+        default: ;
+      endcase
     end
   end
 
@@ -65,20 +69,20 @@ module eth_rx_parser #(
       PREAMBLE: begin
         if (!valid_in) next = DROP;
         else if (data_in == 8'h55) next = PREAMBLE;
-        else if (byte_cnt >= 6 && data_in == 8'hD5) next = DA;
+        else if (byte_cnt >= PREAMBLE_BYTES - 1 && data_in == 8'hD5) next = DA;
         else next = DROP;
       end
       DA: begin
         if (!valid_in) next = DROP;
-        else if (byte_cnt >= 5) next = SA;
+        else if (byte_cnt >= MAC_BYTES - 1) next = SA;
       end
       SA: begin
         if (!valid_in) next = DROP;
-        else if (byte_cnt >= 5) next = TYPE;
+        else if (byte_cnt >= MAC_BYTES - 1) next = TYPE;
       end
       TYPE: begin
         if (!valid_in) next = DROP;
-        else if (byte_cnt >= 1) next = PAYLOAD;
+        else if (byte_cnt >= ETYPE_BYTES - 1) next = PAYLOAD;
       end
       PAYLOAD: if (!valid_in) next = IDLE;
       DROP: if (!valid_in) next = IDLE;
@@ -94,11 +98,10 @@ module eth_rx_parser #(
       dst_reg <= '0;
       src_reg <= '0;
       ether_type_reg <= '0;
+      payload_out <= '0;
     end else begin
       case (current)
-        IDLE: begin
-          payload_out <= '0;
-        end
+        IDLE, DROP: payload_out <= '0;
         PREAMBLE: begin
           dst_reg <= '0;
           src_reg <= '0;
@@ -118,26 +121,18 @@ module eth_rx_parser #(
         PAYLOAD: begin
           if (valid_in) payload_out <= data_in;
         end
-        DROP: payload_out <= '0;
         default: ;
       endcase
     end
   end
 
-  always_ff @(posedge clk) begin
-    if (current == PAYLOAD) payload_valid <= valid_in;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) payload_valid <= 0;
+    else if (current == PAYLOAD) payload_valid <= valid_in;
     else payload_valid <= 0;
   end
 
   assign frame_err = (next == DROP);
-  // always_comb begin
-  //   frame_err = 0;
-  //   case (current)
-  //     PREAMBLE: if (next == IDLE) frame_err = 1;
-  //     default:  frame_err = valid_in;
-  //   endcase
-  // end
-
   assign dst_mac = dst_reg;
   assign src_mac = src_reg;
   assign ether_type = ether_type_reg;
