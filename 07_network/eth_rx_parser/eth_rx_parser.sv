@@ -1,13 +1,13 @@
 // Ethernet RX パーサ
 // WHY: 学習用にEthernetフレームの基本構造を観察・確認できる最小構成を提供する。
 // WHAT: 8-bit入力からpreamble/SFDを検出し、DA/SA/EtherTypeを抽出して
-//       ペイロードをストリーム出力する（ギャップ制約あり）。
+//       ペイロードをストリーム出力する（フレーム中は連続前提）。
 // 仕様（要約）:
 // - 8-bit入力、preamble(7x0x55)+SFD(0xD5)は連続必須
 // - SFD以降: DA(6) -> SA(6) -> EtherType(2) -> payload
 // - フレーム終端はvalid_inの低下で判定
-// - ペイロード中のみvalidギャップを許容（最大4サイクル連続）
-// - frame_errでSFD不一致/ギャップ超過/短小フレームを通知
+// - フレーム中はvalid連続を前提（ギャップはIFGのみ）
+// - frame_errでSFD不一致/短小フレーム/途中切断を通知
 // - VLAN/FCSは未対応
 
 `timescale 1ns / 1ps
@@ -27,14 +27,15 @@ module eth_rx_parser #(
     output logic                  frame_err
 );
   // TODO: FSMベースのEthernetパーサ実装
-  // 状態: IDLE, PREAMBLE, DA, SA, TYPE, PAYLOAD
+  // 状態: IDLE, PREAMBLE, DA, SA, TYPE, PAYLOAD, DROP
   typedef enum logic [2:0] {
     IDLE,
     PREAMBLE,
     DA,
     SA,
     TYPE,
-    PAYLOAD
+    PAYLOAD,
+    DROP
   } state_t;
   state_t current;
   state_t next;
@@ -43,22 +44,16 @@ module eth_rx_parser #(
     else current <= next;
   end
 
-  logic [2:0] byte_cnt;
+  logic [3:0] byte_cnt;
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) byte_cnt <= '0;
-    else if (next != current) byte_cnt <= '0;
-    else if (valid_in && current == PREAMBLE && data_in == 8'h55) begin
-      byte_cnt <= byte_cnt + 1;
-    end else if (valid_in) byte_cnt <= byte_cnt + 1;
-    else if (!valid_in) byte_cnt <= byte_cnt;
-  end
-
-  logic [2:0] gap_cnt;
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) gap_cnt <= '0;
-    else if (next != current) gap_cnt <= '0;
-    else if (!valid_in) gap_cnt <= gap_cnt + 1;
-    else if (valid_in) gap_cnt <= '0;
+    if (!rst_n || next != current) byte_cnt <= '0;
+    else if (valid_in) begin
+      if (current == PREAMBLE && data_in == 8'h55) byte_cnt <= byte_cnt + 1;
+      else if (current == PREAMBLE && byte_cnt >= 6 && data_in == 8'hD5) byte_cnt <= byte_cnt + 1;
+      else if ((current == DA || current == SA || current == TYPE)) begin
+        byte_cnt <= byte_cnt + 1;
+      end
+    end
   end
 
   always_comb begin
@@ -68,29 +63,26 @@ module eth_rx_parser #(
         if (valid_in & data_in == 8'h55) next = PREAMBLE;
       end
       PREAMBLE: begin
-        if (!valid_in) next = IDLE;
-        else begin
-          if (byte_cnt >= 6 & data_in == 8'hD5) next = DA;
-        end
+        if (!valid_in) next = DROP;
+        else if (data_in == 8'h55) next = PREAMBLE;
+        else if (byte_cnt >= 6 && data_in == 8'hD5) next = DA;
+        else next = DROP;
       end
       DA: begin
-        if (gap_cnt > 4) next = IDLE;
-        else if (byte_cnt >= 5 & valid_in) next = SA;
+        if (!valid_in) next = DROP;
+        else if (byte_cnt >= 5) next = SA;
       end
       SA: begin
-        if (gap_cnt > 4) next = IDLE;
-        else if (byte_cnt >= 5 & valid_in) next = TYPE;
+        if (!valid_in) next = DROP;
+        else if (byte_cnt >= 5) next = TYPE;
       end
       TYPE: begin
-        if (gap_cnt > 4) next = IDLE;
-        else if (byte_cnt >= 1 & valid_in) next = PAYLOAD;
+        if (!valid_in) next = DROP;
+        else if (byte_cnt >= 1) next = PAYLOAD;
       end
-      PAYLOAD: begin
-        if (gap_cnt > 4) next = IDLE;
-      end
-      default: begin
-        next = IDLE;
-      end
+      PAYLOAD: if (!valid_in) next = IDLE;
+      DROP: if (!valid_in) next = IDLE;
+      default: next = IDLE;
     endcase
   end
 
@@ -105,6 +97,9 @@ module eth_rx_parser #(
     end else begin
       case (current)
         IDLE: begin
+          payload_out <= '0;
+        end
+        PREAMBLE: begin
           dst_reg <= '0;
           src_reg <= '0;
           ether_type_reg <= '0;
@@ -123,6 +118,7 @@ module eth_rx_parser #(
         PAYLOAD: begin
           if (valid_in) payload_out <= data_in;
         end
+        DROP: payload_out <= '0;
         default: ;
       endcase
     end
@@ -133,13 +129,14 @@ module eth_rx_parser #(
     else payload_valid <= 0;
   end
 
-  always_comb begin
-    frame_err = 0;
-    if (current == PREAMBLE) begin
-      if (!valid_in) frame_err = 1;
-      else if (gap_cnt > 6 && data_in != 8'hD5) frame_err = 1;
-    end else if (current != PAYLOAD && gap_cnt > 4) frame_err = 1;
-  end
+  assign frame_err = (next == DROP);
+  // always_comb begin
+  //   frame_err = 0;
+  //   case (current)
+  //     PREAMBLE: if (next == IDLE) frame_err = 1;
+  //     default:  frame_err = valid_in;
+  //   endcase
+  // end
 
   assign dst_mac = dst_reg;
   assign src_mac = src_reg;
