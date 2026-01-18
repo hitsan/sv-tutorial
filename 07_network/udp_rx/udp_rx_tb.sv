@@ -209,7 +209,9 @@ module udp_rx_tb;
     $display("    DST port: %0d", dst_port_exp);
     $display("    Length:   %0d bytes", udp_length);
     $display("    Checksum: 0x%04h", checksum);
-    $display("    Payload:  %0d bytes", payload.size());
+    $write("    Payload:  ");
+    for (int j = 0; j < payload.size(); j++) $write("%02h ", payload[j]);
+    $display("");
 
     // UDPヘッダ送信（big-endian）
     // Source Port (2 bytes)
@@ -273,8 +275,6 @@ module udp_rx_tb;
           @(posedge clk);
           if (payload_valid) begin
             if (payload_rcv.size() < expected_payload_len) begin
-              $display("  [DEBUG] RX: payload_out=0x%02h (byte %0d)", payload_out,
-                       payload_rcv.size());
               payload_rcv.push_back(payload_out);
             end else begin
               $display("  [DEBUG] Extra payload detected: 0x%02h", payload_out);
@@ -297,7 +297,9 @@ module udp_rx_tb;
     $display("  Received:");
     $display("    SRC port: %0d", src_port_rcv);
     $display("    DST port: %0d", dst_port_rcv);
-    $display("    Payload:  %0d bytes received", payload_rcv.size());
+    $write("    Payload:  ");
+    for (int j = 0; j < payload_rcv.size(); j++) $write("%02h ", payload_rcv[j]);
+    $display("");
 
     // 検証
     if (src_port_rcv !== src_port_exp) begin
