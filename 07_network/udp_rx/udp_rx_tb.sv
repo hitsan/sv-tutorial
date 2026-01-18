@@ -244,34 +244,51 @@ module udp_rx_tb;
     data_in  = checksum[7:0];
     valid_in = 1;
 
-    // ペイロード送信
-    for (i = 0; i < payload.size(); i++) begin
-      @(posedge clk);
-      data_in  = payload[i];
-      valid_in = 1;
+    // 前のパケットの処理が完了するまで待機
+    if (payload_valid) begin
+      $display("  [DEBUG] Waiting for previous packet payload_valid to clear...");
+      while (payload_valid) @(posedge clk);
+      $display("  [DEBUG] payload_valid cleared");
     end
 
-    // パケット終了
-    @(posedge clk);
-    valid_in = 0;
+    // ペイロード送信と受信監視を並行実行
+    fork
+      begin
+        // ペイロード送信
+        for (i = 0; i < payload.size(); i++) begin
+          @(posedge clk);
+          data_in  = payload[i];
+          valid_in = 1;
+        end
 
-    // ペイロードの受信監視
-    timeout  = 0;
-    while (timeout < TIMEOUT_CYCLES) begin
-      @(posedge clk);
-      if (payload_valid) begin
-        if (payload_rcv.size() < expected_payload_len) begin
-          payload_rcv.push_back(payload_out);
-        end else begin
-          extra_payload_seen = 1;
+        // パケット終了
+        @(posedge clk);
+        valid_in = 0;
+      end
+
+      begin
+        // ペイロードの受信監視
+        timeout  = 0;
+        while (timeout < TIMEOUT_CYCLES) begin
+          @(posedge clk);
+          if (payload_valid) begin
+            if (payload_rcv.size() < expected_payload_len) begin
+              $display("  [DEBUG] RX: payload_out=0x%02h (byte %0d)", payload_out,
+                       payload_rcv.size());
+              payload_rcv.push_back(payload_out);
+            end else begin
+              $display("  [DEBUG] Extra payload detected: 0x%02h", payload_out);
+              extra_payload_seen = 1;
+            end
+          end
+          timeout++;
+          // Length基準で受信完了
+          if (payload_rcv.size() >= expected_payload_len) begin
+            break;
+          end
         end
       end
-      timeout++;
-      // Length基準で受信完了
-      if (payload_rcv.size() >= expected_payload_len) begin
-        break;
-      end
-    end
+    join
 
     // 結果確認
     src_port_rcv = src_port;

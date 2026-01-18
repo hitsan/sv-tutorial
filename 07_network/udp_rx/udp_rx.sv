@@ -49,16 +49,16 @@ module udp_rx #(
   always_comb begin
     case (current)
       IDLE: if (valid_in) next = SRC_PORT_H;
-      SRC_PORT_H: next = valid_in ? IDLE : SRC_PORT_L;
-      SRC_PORT_L: next = valid_in ? IDLE : DST_PORT_H;
-      DST_PORT_H: next = valid_in ? IDLE : DST_PORT_H;
-      DST_PORT_L: next = valid_in ? IDLE : LENGTH_H;
-      LENGTH_H: next = valid_in ? IDLE : LENGTH_L;
-      LENGTH_L: next = valid_in ? IDLE : CHECKSUM_H;
-      CHECKSUM_H: next = valid_in ? IDLE : CHECKSUM_L;
-      CHECKSUM_L: next = valid_in ? IDLE : PAYLOAD;
+      SRC_PORT_H: next = valid_in ? SRC_PORT_L : IDLE;
+      SRC_PORT_L: next = valid_in ? DST_PORT_H : IDLE;
+      DST_PORT_H: next = valid_in ? DST_PORT_L : IDLE;
+      DST_PORT_L: next = valid_in ? LENGTH_H : IDLE;
+      LENGTH_H: next = valid_in ? LENGTH_L : IDLE;
+      LENGTH_L: next = valid_in ? CHECKSUM_H : IDLE;
+      CHECKSUM_H: next = valid_in ? CHECKSUM_L : IDLE;
+      CHECKSUM_L: next = valid_in ? PAYLOAD : IDLE;
       PAYLOAD: begin
-        if (payload_count > length - 7) next = IDLE;
+        if (payload_count >= length - 8) next = IDLE;
         else next = PAYLOAD;
       end
       default: ;
@@ -68,7 +68,7 @@ module udp_rx #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) src_port <= '0;
     else begin
-      case (current)
+      case (next)
         SRC_PORT_H, SRC_PORT_L: src_port <= {src_port[7:0], data_in};
         default: src_port <= src_port;
       endcase
@@ -78,7 +78,7 @@ module udp_rx #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) dst_port <= '0;
     else begin
-      case (current)
+      case (next)
         DST_PORT_H, DST_PORT_L: dst_port <= {dst_port[7:0], data_in};
         default: dst_port <= dst_port;
       endcase
@@ -95,7 +95,7 @@ module udp_rx #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) length <= '0;
     else begin
-      case (current)
+      case (next)
         IDLE: length <= '0;
         LENGTH_H, LENGTH_L: length <= {length[7:0], data_in};
         default: length <= length;
@@ -112,7 +112,7 @@ module udp_rx #(
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) payload_count <= '0;
     else begin
-      case (current)
+      case (next)
         IDLE: payload_count <= '0;
         PAYLOAD: begin
           if (valid_in) payload_count <= payload_count + 1;
@@ -123,7 +123,7 @@ module udp_rx #(
     end
   end
 
-  assign payload_valid = (current == PAYLOAD && payload_count < length - 8);
+  assign payload_valid = (current == PAYLOAD && payload_count <= length - 8);
 
   always_comb begin
     payload_out = payload_valid ? data_in : '0;
