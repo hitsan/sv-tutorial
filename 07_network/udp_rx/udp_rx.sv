@@ -53,6 +53,11 @@ module udp_rx #(
   //    - payload_count < (Length - 8) の間だけpayload_valid=1
   //    - Lengthに達したらIDLEへ遷移（valid_in=1でも終了）
   logic [15:0] payload_count;
+  logic [15:0] payload_len;
+
+  always_comb begin
+    payload_len = (length >= 16'd8) ? (length - 16'd8) : 16'd0;
+  end
 
   // 1-process style: 状態遷移とデータキャプチャを統合
   always_ff @(posedge clk or negedge rst_n) begin
@@ -143,7 +148,7 @@ module udp_rx #(
         end
 
         PAYLOAD: begin
-          if (length < 8 || payload_count >= length - 8 - 1) begin
+          if (payload_len == 0 || payload_count >= payload_len - 1) begin
             current <= IDLE;
             payload_count <= '0;
           end else begin
@@ -161,7 +166,7 @@ module udp_rx #(
     end
   end
 
-  assign payload_valid = (current == PAYLOAD && payload_count < length - 8 && valid_in);
+  assign payload_valid = (current == PAYLOAD && payload_count < payload_len && valid_in);
 
   assign payload_out   = payload_valid ? data_in : '0;
 
