@@ -216,8 +216,8 @@ module udp_rx_tb;
     payload_rcv.delete();
 
     $display("  Sending UDP packet:");
-    $display("    SRC port: %0d", src_port_exp);
-    $display("    DST port: %0d", dst_port_exp);
+    $display("    SRC port: 0x%04h", src_port_exp);
+    $display("    DST port: 0x%04h", dst_port_exp);
     $display("    Length:   %0d bytes", udp_length);
     $display("    Checksum: 0x%04h", checksum);
     $write("    Payload:  ");
@@ -226,50 +226,50 @@ module udp_rx_tb;
 
     // UDPヘッダ送信（big-endian）
     // Source Port (2 bytes)
-    @(posedge clk);
     data_in  = src_port_exp[15:8];
     valid_in = 1;
     @(posedge clk);
     data_in  = src_port_exp[7:0];
     valid_in = 1;
+    @(posedge clk);
 
     // Destination Port (2 bytes)
-    @(posedge clk);
     data_in  = dst_port_exp[15:8];
     valid_in = 1;
     @(posedge clk);
     data_in  = dst_port_exp[7:0];
     valid_in = 1;
+    @(posedge clk);
 
     // Length (2 bytes)
-    @(posedge clk);
     data_in  = udp_length[15:8];
     valid_in = 1;
     @(posedge clk);
     data_in  = udp_length[7:0];
     valid_in = 1;
+    @(posedge clk);
 
     // Checksum (2 bytes)
-    @(posedge clk);
     data_in  = checksum[15:8];
     valid_in = 1;
     @(posedge clk);
     data_in  = checksum[7:0];
     valid_in = 1;
+    @(posedge clk);
 
     // ペイロード送信と受信監視を並行実行
     fork
       begin
         // ペイロード送信
         for (i = 0; i < payload.size(); i++) begin
-          @(posedge clk);
           data_in  = payload[i];
           valid_in = 1;
+          @(posedge clk);
         end
 
         // パケット終了
-        @(posedge clk);
         valid_in = 0;
+        @(posedge clk);
       end
 
       begin
@@ -299,19 +299,19 @@ module udp_rx_tb;
     dst_port_rcv = dst_port;
 
     $display("  Received:");
-    $display("    SRC port: %0d", src_port_rcv);
-    $display("    DST port: %0d", dst_port_rcv);
+    $display("    SRC port: 0x%04h", src_port_rcv);
+    $display("    DST port: 0x%04h", dst_port_rcv);
     $write("    Payload:  ");
     for (int j = 0; j < payload_rcv.size(); j++) $write("%02h ", payload_rcv[j]);
     $display("");
 
     // 検証
     if (src_port_rcv !== src_port_exp) begin
-      $display("  [ERROR] Source port mismatch! Expected: %0d, Got: %0d", src_port_exp,
+      $display("  [ERROR] Source port mismatch! Expected: 0x%04h, Got: 0x%04h", src_port_exp,
                src_port_rcv);
       error_count++;
     end else if (dst_port_rcv !== dst_port_exp) begin
-      $display("  [ERROR] Destination port mismatch! Expected: %0d, Got: %0d", dst_port_exp,
+      $display("  [ERROR] Destination port mismatch! Expected: 0x%04h, Got: 0x%04h", dst_port_exp,
                dst_port_rcv);
       error_count++;
     end else if (timeout >= TIMEOUT_CYCLES && payload_rcv.size() < expected_payload_len) begin

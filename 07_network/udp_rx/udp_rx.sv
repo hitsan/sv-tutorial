@@ -40,94 +40,130 @@ module udp_rx #(
   } state_t;
 
   state_t current;
-  state_t next;
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) current <= IDLE;
-    else current <= next;
-  end
-
-  always_comb begin
-    case (current)
-      IDLE: if (valid_in) next = SRC_PORT_H;
-      SRC_PORT_H: next = valid_in ? SRC_PORT_L : IDLE;
-      SRC_PORT_L: next = valid_in ? DST_PORT_H : IDLE;
-      DST_PORT_H: next = valid_in ? DST_PORT_L : IDLE;
-      DST_PORT_L: next = valid_in ? LENGTH_H : IDLE;
-      LENGTH_H: next = valid_in ? LENGTH_L : IDLE;
-      LENGTH_L: next = valid_in ? CHECKSUM_H : IDLE;
-      CHECKSUM_H: next = valid_in ? CHECKSUM_L : IDLE;
-      CHECKSUM_L: next = valid_in ? PAYLOAD : IDLE;
-      PAYLOAD: begin
-        if (payload_count >= length - 8) next = IDLE;
-        else next = PAYLOAD;
-      end
-      default: ;
-    endcase
-  end
-
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) src_port <= '0;
-    else begin
-      case (next)
-        SRC_PORT_H, SRC_PORT_L: src_port <= {src_port[7:0], data_in};
-        default: src_port <= src_port;
-      endcase
-    end
-  end
-
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) dst_port <= '0;
-    else begin
-      case (next)
-        DST_PORT_H, DST_PORT_L: dst_port <= {dst_port[7:0], data_in};
-        default: dst_port <= dst_port;
-      endcase
-    end
-  end
 
   // 2. Lengthフィールドの処理（重要）
   //    - UDP Lengthフィールド = ヘッダ(8) + ペイロード長
   //    - ペイロード長 = Length - 8
   //    - Lengthで指定された分だけペイロードを出力
   //    - それ以上のデータは破棄する
-
   logic [15:0] length;
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) length <= '0;
-    else begin
-      case (next)
-        IDLE: length <= '0;
-        LENGTH_H, LENGTH_L: length <= {length[7:0], data_in};
-        default: length <= length;
-      endcase
-    end
-  end
 
   // 3. ペイロード出力制御
   //    - payload_countカウンタを用意
   //    - payload_count < (Length - 8) の間だけpayload_valid=1
   //    - Lengthに達したらIDLEへ遷移（valid_in=1でも終了）
-  //
   logic [15:0] payload_count;
+
+  // 1-process style: 状態遷移とデータキャプチャを統合
   always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) payload_count <= '0;
-    else begin
-      case (next)
-        IDLE: payload_count <= '0;
-        PAYLOAD: begin
-          if (valid_in) payload_count <= payload_count + 1;
-          else payload_count <= payload_count;
+    if (!rst_n) begin
+      current <= IDLE;
+      src_port <= '0;
+      dst_port <= '0;
+      length <= '0;
+      payload_count <= '0;
+    end else begin
+      case (current)
+        IDLE: begin
+          if (valid_in) begin
+            current <= SRC_PORT_H;
+            src_port[15:8] <= data_in;
+          end
+          length <= '0;
+          payload_count <= '0;
         end
-        default: ;
+
+        SRC_PORT_H: begin
+          if (valid_in) begin
+            current <= SRC_PORT_L;
+            src_port[7:0] <= data_in;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        SRC_PORT_L: begin
+          if (valid_in) begin
+            current <= DST_PORT_H;
+            dst_port[15:8] <= data_in;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        DST_PORT_H: begin
+          if (valid_in) begin
+            current <= DST_PORT_L;
+            dst_port[7:0] <= data_in;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        DST_PORT_L: begin
+          if (valid_in) begin
+            current <= LENGTH_H;
+            length[15:8] <= data_in;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        LENGTH_H: begin
+          if (valid_in) begin
+            current <= LENGTH_L;
+            length[7:0] <= data_in;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        LENGTH_L: begin
+          if (valid_in) begin
+            current <= CHECKSUM_H;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        CHECKSUM_H: begin
+          if (valid_in) begin
+            current <= CHECKSUM_L;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        CHECKSUM_L: begin
+          if (valid_in) begin
+            current <= PAYLOAD;
+          end else begin
+            current <= IDLE;
+          end
+        end
+
+        PAYLOAD: begin
+          if (length < 8 || payload_count >= length - 8 - 1) begin
+            current <= IDLE;
+            payload_count <= '0;
+          end else begin
+            if (valid_in) begin
+              payload_count <= payload_count + 1;
+            end
+            // valid_in=0の時は一時停止（カウント維持、状態維持）
+          end
+        end
+
+        default: begin
+          current <= IDLE;
+        end
       endcase
     end
   end
 
-  assign payload_valid = (current == PAYLOAD && payload_count <= length - 8);
+  assign payload_valid = (current == PAYLOAD && payload_count < length - 8 && valid_in);
 
-  always_comb begin
-    payload_out = payload_valid ? data_in : '0;
-  end
+  assign payload_out   = payload_valid ? data_in : '0;
 
   // 4. エラー処理
   //    - ヘッダ受信中にvalid_in=0 → IDLEへ戻る
