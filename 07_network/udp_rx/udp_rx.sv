@@ -16,16 +16,6 @@ module udp_rx #(
     output logic                  payload_valid
 );
 
-  // TODO: UDPヘッダパーサ実装
-  //
-  // 実装ガイド:
-  // 1. ステートマシンの設計
-  //    - UDPヘッダは以下の順序で8バイト:
-  //      Source Port(2) → Dest Port(2) → Length(2) → Checksum(2)
-  //    - 各フィールドをパースするステートを定義
-  //    - ビッグエンディアン（上位バイトが先）に注意
-  //
-
   typedef enum {
     IDLE,
     SRC_PORT_H,
@@ -41,17 +31,7 @@ module udp_rx #(
 
   state_t current;
 
-  // 2. Lengthフィールドの処理（重要）
-  //    - UDP Lengthフィールド = ヘッダ(8) + ペイロード長
-  //    - ペイロード長 = Length - 8
-  //    - Lengthで指定された分だけペイロードを出力
-  //    - それ以上のデータは破棄する
   logic [15:0] length;
-
-  // 3. ペイロード出力制御
-  //    - payload_countカウンタを用意
-  //    - payload_count < (Length - 8) の間だけpayload_valid=1
-  //    - Lengthに達したらIDLEへ遷移（valid_in=1でも終了）
   logic [15:0] payload_count;
   logic [15:0] payload_len;
 
@@ -59,7 +39,6 @@ module udp_rx #(
     payload_len = (length >= 16'd8) ? (length - 16'd8) : 16'd0;
   end
 
-  // 1-process style: 状態遷移とデータキャプチャを統合
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       current <= IDLE;
@@ -148,14 +127,13 @@ module udp_rx #(
         end
 
         PAYLOAD: begin
-          if (payload_len == 0 || payload_count >= payload_len - 1) begin
+          if (payload_count + 1 >= payload_len) begin
             current <= IDLE;
             payload_count <= '0;
           end else begin
             if (valid_in) begin
               payload_count <= payload_count + 1;
             end
-            // valid_in=0の時は一時停止（カウント維持、状態維持）
           end
         end
 
@@ -169,13 +147,4 @@ module udp_rx #(
   assign payload_valid = (current == PAYLOAD && payload_count < payload_len && valid_in);
 
   assign payload_out   = payload_valid ? data_in : '0;
-
-  // 4. エラー処理
-  //    - ヘッダ受信中にvalid_in=0 → IDLEへ戻る
-  //    - ペイロード受信中のvalid_in=0は一時停止として扱う
-  //
-  // 5. チェックサム
-  //    - 簡易版のため検証不要（読み捨て）
-  //
-
 endmodule
