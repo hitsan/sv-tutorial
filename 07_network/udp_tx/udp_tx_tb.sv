@@ -19,6 +19,10 @@ module udp_tx_tb;
     logic [15:0]           dst_port;
     logic [31:0]           src_ip;
     logic [31:0]           dst_ip;
+`ifdef UDP_TX_HAS_LEN
+    logic [15:0]           payload_len;
+    logic                  payload_len_valid;
+`endif
     logic [DATA_WIDTH-1:0] payload_in;
     logic                  payload_valid;
     logic                  payload_sof;
@@ -42,6 +46,10 @@ module udp_tx_tb;
         .dst_port     (dst_port),
         .src_ip       (src_ip),
         .dst_ip       (dst_ip),
+`ifdef UDP_TX_HAS_LEN
+        .payload_len  (payload_len),
+        .payload_len_valid(payload_len_valid),
+`endif
         .payload_in   (payload_in),
         .payload_valid(payload_valid),
         .payload_sof  (payload_sof),
@@ -69,6 +77,10 @@ module udp_tx_tb;
         dst_port = 0;
         src_ip = 0;
         dst_ip = 0;
+`ifdef UDP_TX_HAS_LEN
+        payload_len = 0;
+        payload_len_valid = 0;
+`endif
         payload_in = 0;
         payload_valid = 0;
         payload_sof = 0;
@@ -114,6 +126,7 @@ module udp_tx_tb;
         );
 
         // Test 4: ゼロバイトペイロード
+`ifdef UDP_TX_HAS_LEN
         test_count++;
         $display("\n[Test %0d] Zero-byte payload", test_count);
         send_payload_and_check(
@@ -123,6 +136,10 @@ module udp_tx_tb;
             32'hC0A80004,
             '{} // 空配列
         );
+`else
+        // 本インタフェースは長さ入力が無いため、ゼロ長と1バイト(0x00)が区別できない。
+        // 仕様を一意化するためゼロ長は未対応とする。
+`endif
 
         // Test 5: 大きめのペイロード
         test_count++;
@@ -235,14 +252,17 @@ module udp_tx_tb;
         logic [7:0] packet_rcv[$];
         logic [15:0] udp_length;
         logic [15:0] expected_checksum;
+        int expected_len;
         int timeout;
         logic [15:0] rcv_src_port;
         logic [15:0] rcv_dst_port;
         logic [15:0] rcv_length;
         logic [15:0] rcv_checksum;
         logic got_sof, got_eof;
+        logic sof_pos_ok, eof_pos_ok;
 
         udp_length = 8 + payload.size();
+        expected_len = 8 + payload.size();
         expected_checksum = calc_udp_checksum(src_ip_in, dst_ip_in, src_port_in, dst_port_in, payload);
 
         $display("  Sending payload:");
@@ -259,8 +279,20 @@ module udp_tx_tb;
         dst_port = dst_port_in;
         src_ip = src_ip_in;
         dst_ip = dst_ip_in;
+`ifdef UDP_TX_HAS_LEN
+        payload_len = payload.size();
+        payload_len_valid = 1;
+`endif
 
-        // ペイロード送信
+`ifndef UDP_TX_HAS_LEN
+        if (payload.size() == 0) begin
+            $display("  [ERROR] Zero-length payload is not supported by this interface");
+            error_count++;
+            return;
+        end
+`endif
+
+        // ペイロード送信（validはreadyが高いときのみ1サイクルアサートする前提）
         for (i = 0; i < payload.size(); i++) begin
             @(posedge clk);
             while (!payload_ready) @(posedge clk); // バックプレッシャー対応
@@ -270,35 +302,35 @@ module udp_tx_tb;
             payload_eof = (i == payload.size() - 1);
         end
 
-        // ゼロバイトペイロードの場合はSOF/EOFのみ
-        if (payload.size() == 0) begin
-            @(posedge clk);
-            while (!payload_ready) @(posedge clk);
-            payload_valid = 1;
-            payload_sof = 1;
-            payload_eof = 1;
-            payload_in = 8'h00; // ダミー
-        end
-
         @(posedge clk);
         payload_valid = 0;
         payload_sof = 0;
         payload_eof = 0;
+`ifdef UDP_TX_HAS_LEN
+        payload_len_valid = 0;
+`endif
 
         // パケット出力の監視
         timeout = 0;
         got_sof = 0;
         got_eof = 0;
+        sof_pos_ok = 1;
+        eof_pos_ok = 1;
         while (timeout < TIMEOUT_CYCLES) begin
             @(posedge clk);
             if (packet_valid) begin
+                // SOF/EOFは厳密に先頭/末尾バイトでのみアサートされる前提
+                if (packet_sof && (packet_rcv.size() != 0)) sof_pos_ok = 0;
                 packet_rcv.push_back(packet_out);
                 if (packet_sof) got_sof = 1;
-                if (packet_eof) got_eof = 1;
+                if (packet_eof) begin
+                    got_eof = 1;
+                    if (packet_rcv.size() != expected_len) eof_pos_ok = 0;
+                end
             end
             timeout++;
             // UDPヘッダ(8バイト) + ペイロード分受信 かつ EOFを検出したら終了
-            if (got_eof && packet_rcv.size() >= (8 + payload.size())) break;
+            if (got_eof && packet_rcv.size() >= expected_len) break;
         end
 
         $display("  Received packet: %0d bytes (SOF=%0d, EOF=%0d)", packet_rcv.size(), got_sof, got_eof);
@@ -334,7 +366,9 @@ module udp_tx_tb;
                 error_count++;
                 header_ok = 0;
             end
-            if (rcv_checksum !== expected_checksum) begin
+            // UDPチェックサムは必須。計算結果が0の場合は0xFFFFを送出する前提。
+            if ((expected_checksum == 16'h0000 && rcv_checksum !== 16'hFFFF) ||
+                (expected_checksum != 16'h0000 && rcv_checksum !== expected_checksum)) begin
                 $display("  [ERROR] Checksum mismatch!");
                 error_count++;
                 header_ok = 0;
@@ -350,8 +384,18 @@ module udp_tx_tb;
                 error_count++;
                 header_ok = 0;
             end
+            if (!sof_pos_ok) begin
+                $display("  [ERROR] packet_sof asserted at non-first byte!");
+                error_count++;
+                header_ok = 0;
+            end
             if (!got_eof) begin
                 $display("  [ERROR] packet_eof not asserted!");
+                error_count++;
+                header_ok = 0;
+            end
+            if (!eof_pos_ok) begin
+                $display("  [ERROR] packet_eof asserted at non-last byte!");
                 error_count++;
                 header_ok = 0;
             end
@@ -383,6 +427,10 @@ module udp_tx_tb;
         dst_port = 0;
         src_ip = 0;
         dst_ip = 0;
+`ifdef UDP_TX_HAS_LEN
+        payload_len = 0;
+        payload_len_valid = 0;
+`endif
         payload_in = 0;
         payload_valid = 0;
         payload_sof = 0;

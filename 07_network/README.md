@@ -112,6 +112,15 @@
   - ヘッダ自動生成
   - ペイロード受信とパケット送出
 - **ファイル**: `udp_tx/udp_tx.sv`, `udp_tx/udp_tx_tb.sv`
+ - **仕様（学習向け提案）**:
+   - 入力は8-bitの`payload_in`と`payload_valid`、`payload_sof/eof`。
+   - すべてのフィールドはビッグエンディアン（ネットワークバイトオーダー）。
+   - UDPヘッダは Source Port → Dest Port → Length → Checksum の順で出力。
+   - チェックサムは必須。計算結果が0x0000のときは0xFFFFを送出。
+   - `packet_sof`はヘッダ先頭バイト、`packet_eof`は最終バイトで1サイクルだけアサート。
+   - **ゼロ長対応**: `+define+UDP_TX_HAS_LEN`有効時のみ対応。
+     - `payload_len`/`payload_len_valid`で長さを確定し、`payload_len=0`ならヘッダのみ送出。
+     - `payload_len_valid`後は`payload_sof/eof`で長さを再計算しない。
 
 ### 5. Network Example (network_example/simple_udp_loopback.sv)
 - **概要**: UDPエコーサーバの統合実装例
