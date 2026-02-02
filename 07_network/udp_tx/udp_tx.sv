@@ -10,17 +10,17 @@ module udp_tx #(
     // ペイロード入力
     input  logic [          15:0] src_port,
     input  logic [          15:0] dst_port,
-    input  logic [          31:0] src_ip,         // チェックサム計算用
-    input  logic [          31:0] dst_ip,         // チェックサム計算用
+    input  logic [          31:0] src_ip,             // チェックサム計算用
+    input  logic [          31:0] dst_ip,             // チェックサム計算用
 `ifdef UDP_TX_HAS_LEN
-    input  logic [          15:0] payload_len,   // バイト数(0も可)
+    input  logic [          15:0] payload_len,        // バイト数(0も可)
     input  logic                  payload_len_valid,
 `endif
     input  logic [DATA_WIDTH-1:0] payload_in,
     input  logic                  payload_valid,
-    input  logic                  payload_sof,    // Start of Frame
-    input  logic                  payload_eof,    // End of Frame
-    output logic                  payload_ready,  // バックプレッシャー
+    input  logic                  payload_sof,        // Start of Frame
+    input  logic                  payload_eof,        // End of Frame
+    output logic                  payload_ready,      // バックプレッシャー
     // パケット出力
     output logic [DATA_WIDTH-1:0] packet_out,
     output logic                  packet_valid,
@@ -71,6 +71,90 @@ module udp_tx #(
   // ====================================================================
 
   // TODO: ここに実装を追加
+  typedef enum {
+    IDLE,
+    BUFFER,
+    HEADER,
+    PAYLOAD
+  } state_t;
+  state_t current;
+  
+  logic [15:0] src_port_reg;
+  logic [15:0] dst_port_reg;
+  logic [31:0] src_ip_reg;
+  logic [31:0] dst_ip_reg;
+  logic [16:0] sum;
+  always_ff begin
+    if (!rst_n) begin
+      src_port_reg <= '0;
+      dst_port_reg <= '0;
+      src_ip_reg <= '0;
+      dst_ip_reg <= '0;
+      sum <= '0;
+    end else if (payload_sof) begin
+      src_port_reg <= src_port;
+      dst_port_reg <= dst_port;
+      src_ip_reg <= src_ip;
+      dst_ip_reg <= dst_ip;
+      sum <= '0;
+    end else begin
+      sum <= src_ip[31:16] + src_ip[15:0];
+      sum <= {16h'0, sum[16]} + sum[15:0] + dst_ip[31:16];
+      sum <= {16h'0, sum[16]} + sum[15:0] + dst_ip[15:0];
+      sum <= {16h'0, sum[16]} + sum[15:0] + 16'h17;
+      sum <= {16h'0, sum[16]} + sum[15:0] + payload_len;
+    end
+  end
+    
+  logic [39:0] buffer;
+  logic [2:0] payload_cnt;
+  logic [3:0] header_cnt;
+  logic [15:0] length;
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (rst_n) current <= IDLE;
+    else begin
+      case (current)
+        IDLE: begin
+          if (payload_sof && payload_valid) begin
+            current <= BUFFER;
+            buffer <= {buffer[31:8], data_in};
+            payload_cnt <= 3'b1;
+          end
+        end
+        BUFFER: begin
+          if (!valid_in) begin
+            payload_cnt <= payload_cnt;
+          end else begin
+            if (payload_eof) begin
+              current <= HEADER;
+              buffer  <= {buffer[31:8], 8'h6F};
+            end else begin
+              payload_cnt <= payload_cnt + 1;
+              buffer <= {buffer[31:8], data_in};
+            end
+          end
+        end
+        HEADER: begin
+          if (!valid_in) begin
+            header_cnt <= header_cnt + 1;
+            packet_valid <= 1;
+            case (header_cnt)
+              0: packet_out <= src_port[15:8];
+              1: packet_out <= src_port[7:0];
+              2: packet_out <= dst_port[15:8];
+              3: packet_out <= dst_port[7:0];
+              4: packet_out <= length[15:8];
+              5: packet_out <= length[7:0];
+              6: ;
+              7: ;
+            endcase
+          end
+        end;
+        PAYLOAD: ;
+      endcase
+    end
+  end
 
+  assign packet_sof = (header_cnt == 0 && current == HEADER);
 
 endmodule
