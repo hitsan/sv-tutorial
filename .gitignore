@@ -20,3 +20,9 @@ logs/
 .svlint.toml
 
 .claude/*
+
+# Nix
+.direnv/
+.envrc
+result
+result-*
